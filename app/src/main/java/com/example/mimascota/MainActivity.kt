@@ -1,4 +1,4 @@
-
+}
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
@@ -136,6 +136,7 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 AppNavHost(db)
             }
+        }
     }
 }
 
@@ -168,15 +169,7 @@ fun AppNavHost(db: MascotaDatabase) {
             } catch (e: Exception) {
                 emptyList()
             }
-                confirmButton = {
-                    TextButton(onClick = { 
-                        showAlertDialog = false
-                        activeNotification = null
-                    }) { 
-                        Text("Confirmar", fontWeight = FontWeight.Bold, fontSize = 16.sp) 
-                    }
-                }
-            )
+                // Aquí terminaba el bloque de notificaciones, eliminar código fuera de lugar
     }
 }
 
@@ -841,8 +834,7 @@ fun TipoAnimalDropdown(selectedTipo: String, onTipoSelected: (String) -> Unit) {
                         expanded = false
                     }
                 )
+            }
         }
     }
-}
-
 }
