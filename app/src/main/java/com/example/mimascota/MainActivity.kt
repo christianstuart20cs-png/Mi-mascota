@@ -1,20 +1,41 @@
-@Entity(tableName = "mascotas")
-data class Mascota(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val nombre: String,
-    val tipo: String,
-    val raza: String,
-    val descripcion: String,
-    val pesoKg: Double,
-    val fotoUri: String? = null
-)
 
-@Entity(
-    tableName = "historial_medico",
-    foreignKeys = [
-        ForeignKey(
-            entity = Mascota::class,
-            parentColumns = ["id"],
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.Dao
+import androidx.room.Query
+import androidx.room.Insert
+import androidx.room.Update
+import androidx.room.Delete
+import androidx.room.Database
+import androidx.room.RoomDatabase
+
+import androidx.compose.runtime.*
+import androidx.compose.material3.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Image
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardActions
+
             childColumns = ["mascotaId"],
             onDelete = ForeignKey.CASCADE
         )
@@ -143,106 +164,43 @@ fun AppNavHost(db: MascotaDatabase) {
                 emptyList()
             }
             
-            recordatoriosHoy.forEach { recordatorio ->
-                val timeSinceLastNotif = System.currentTimeMillis() - lastNotificationTime
-                if (timeSinceLastNotif > 300000 || activeNotification?.id != recordatorio.id) { // 5 minutos
-                    if (notificationShowCount < 3) {
-                        activeNotification = recordatorio
-                        notificationShowCount = 0
-                        lastNotificationTime = System.currentTimeMillis()
-                    }
-                }
-            }
-        }
-    }
-    
-    // Reproducir sonido cuando haya notificación activa
-    LaunchedEffect(activeNotification) {
-        if (activeNotification != null && notificationShowCount < 3) {
-            try {
-                val uri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION)
-                val ringtone = android.media.RingtoneManager.getRingtone(context, uri)
-                ringtone.play()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-    
-    NavHost(navController = navController, startDestination = "mascotas") {
-        composable("mascotas") {
-            MiMascotaApp(db.mascotaDao(), navController)
-        }
-        composable("agregar_mascota") {
-            AgregarMascotaScreen(db.mascotaDao(), navController)
-        }
-        composable("editar_mascota/{mascotaId}") { backStackEntry ->
-            val mascotaId = backStackEntry.arguments?.getString("mascotaId")?.toInt() ?: 0
-            EditMascotaScreen(mascotaId, db.mascotaDao(), navController)
-        }
-        composable("historial/{mascotaId}") { backStackEntry ->
-            val mascotaId = backStackEntry.arguments?.getString("mascotaId")?.toInt() ?: 0
-            HistorialMedicoScreen(mascotaId, db.historialMedicoDao(), navController)
-        }
-        composable("recordatorios/{mascotaId}") { backStackEntry ->
-            val mascotaId = backStackEntry.arguments?.getString("mascotaId")?.toInt() ?: 0
-            RecordatoriosMascotaScreen(mascotaId, db.recordatorioDao(), navController)
-        }
-        composable("agregar_recordatorio/{mascotaId}") { backStackEntry ->
-            val mascotaId = backStackEntry.arguments?.getString("mascotaId")?.toInt() ?: 0
-            AgregarRecordatorioScreen(mascotaId, db.recordatorioDao(), navController)
-        }
-    }
-    
-    // AlertDialog para notificación de recordatorio
-    if (activeNotification != null) {
-        var showAlertDialog by remember { mutableStateOf(true) }
-        var dismissCountdown by remember { mutableStateOf(30) }
-        
-        LaunchedEffect(showAlertDialog) {
-            if (showAlertDialog && dismissCountdown > 0) {
-                kotlinx.coroutines.delay(1000)
-                dismissCountdown--
-                if (dismissCountdown <= 0) {
-                    notificationShowCount++
-                    if (notificationShowCount < 3) {
-                        dismissCountdown = 30
-                    } else {
-                        activeNotification = null
-                        showAlertDialog = false
-                    }
-                }
-            }
-        }
-        
-        if (showAlertDialog && activeNotification != null) {
-            AlertDialog(
-                onDismissRequest = { 
-                    showAlertDialog = false
-                    activeNotification = null
-                },
-                title = { 
-                    Text("⏰ RECORDATORIO", fontWeight = FontWeight.Bold, fontSize = 24.sp, color = Color.Red)
-                },
-                text = { 
-                    Column {
-                        Text(
-                            activeNotification?.descripcion ?: "Recordatorio",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "Cierre en: ${dismissCountdown}s",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "Recordatorio ${notificationShowCount + 1} de 3",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+            import androidx.room.Entity
+            import androidx.room.PrimaryKey
+            import androidx.room.ForeignKey
+            import androidx.room.Index
+            import androidx.room.Dao
+            import androidx.room.Query
+            import androidx.room.Insert
+            import androidx.room.Update
+            import androidx.room.Delete
+            import androidx.room.Database
+            import androidx.room.RoomDatabase
+
+            import androidx.compose.runtime.*
+            import androidx.compose.material3.*
+            import androidx.compose.foundation.layout.*
+            import androidx.compose.foundation.Image
+            import androidx.compose.ui.Modifier
+            import androidx.compose.ui.unit.dp
+            import androidx.compose.ui.unit.sp
+            import androidx.compose.ui.text.font.FontWeight
+            import androidx.compose.ui.graphics.Color
+            import androidx.compose.ui.platform.LocalContext
+            import androidx.compose.foundation.lazy.LazyColumn
+            import androidx.compose.foundation.lazy.items
+            import androidx.compose.foundation.shape.RoundedCornerShape
+            import androidx.compose.material.icons.Icons
+            import androidx.compose.material.icons.filled.*
+            import androidx.compose.ui.res.painterResource
+            import androidx.compose.ui.Alignment
+            import androidx.compose.ui.text.input.TextFieldValue
+            import androidx.compose.ui.text.input.VisualTransformation
+            import androidx.compose.ui.text.input.PasswordVisualTransformation
+            import androidx.compose.ui.text.input.KeyboardType
+            import androidx.compose.ui.text.input.ImeAction
+            import androidx.compose.ui.text.input.KeyboardOptions
+            import androidx.compose.ui.text.input.KeyboardActions
+
                         )
                     }
                 },
@@ -750,7 +708,6 @@ fun RecordatoriosMascotaScreen(mascotaId: Int, recordatorioDao: RecordatorioDao,
 }
 
 /* ------------------ AGREGAR RECORDATORIO SCREEN ------------------ */
-@Composable
 @Composable
 fun AgregarRecordatorioScreen(
     mascotaId: Int,
