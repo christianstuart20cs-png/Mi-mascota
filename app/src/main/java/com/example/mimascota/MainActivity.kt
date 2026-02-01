@@ -36,6 +36,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardActions
 
+@Entity(
+    tableName = "historial_medico",
+    foreignKeys = [
+        ForeignKey(
+            entity = Mascota::class,
+            parentColumns = ["id"],
             childColumns = ["mascotaId"],
             onDelete = ForeignKey.CASCADE
         )
@@ -130,7 +136,6 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 AppNavHost(db)
             }
-        }
     }
 }
 
@@ -163,47 +168,6 @@ fun AppNavHost(db: MascotaDatabase) {
             } catch (e: Exception) {
                 emptyList()
             }
-            
-            import androidx.room.Entity
-            import androidx.room.PrimaryKey
-            import androidx.room.ForeignKey
-            import androidx.room.Index
-            import androidx.room.Dao
-            import androidx.room.Query
-            import androidx.room.Insert
-            import androidx.room.Update
-            import androidx.room.Delete
-            import androidx.room.Database
-            import androidx.room.RoomDatabase
-
-            import androidx.compose.runtime.*
-            import androidx.compose.material3.*
-            import androidx.compose.foundation.layout.*
-            import androidx.compose.foundation.Image
-            import androidx.compose.ui.Modifier
-            import androidx.compose.ui.unit.dp
-            import androidx.compose.ui.unit.sp
-            import androidx.compose.ui.text.font.FontWeight
-            import androidx.compose.ui.graphics.Color
-            import androidx.compose.ui.platform.LocalContext
-            import androidx.compose.foundation.lazy.LazyColumn
-            import androidx.compose.foundation.lazy.items
-            import androidx.compose.foundation.shape.RoundedCornerShape
-            import androidx.compose.material.icons.Icons
-            import androidx.compose.material.icons.filled.*
-            import androidx.compose.ui.res.painterResource
-            import androidx.compose.ui.Alignment
-            import androidx.compose.ui.text.input.TextFieldValue
-            import androidx.compose.ui.text.input.VisualTransformation
-            import androidx.compose.ui.text.input.PasswordVisualTransformation
-            import androidx.compose.ui.text.input.KeyboardType
-            import androidx.compose.ui.text.input.ImeAction
-            import androidx.compose.ui.text.input.KeyboardOptions
-            import androidx.compose.ui.text.input.KeyboardActions
-
-                        )
-                    }
-                },
                 confirmButton = {
                     TextButton(onClick = { 
                         showAlertDialog = false
@@ -213,7 +177,6 @@ fun AppNavHost(db: MascotaDatabase) {
                     }
                 }
             )
-        }
     }
 }
 
@@ -333,8 +296,7 @@ fun MiMascotaApp(mascotaDao: MascotaDao, navController: NavController) {
                     mascotaToDelete = null
                 }) { Text("Cancelar") }
             }
-        )
-    }
+            )
 }
 }
 
@@ -879,7 +841,8 @@ fun TipoAnimalDropdown(selectedTipo: String, onTipoSelected: (String) -> Unit) {
                         expanded = false
                     }
                 )
-            }
         }
     }
+}
+
 }
