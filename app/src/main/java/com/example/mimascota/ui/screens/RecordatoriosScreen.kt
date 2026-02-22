@@ -19,12 +19,14 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -39,6 +41,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.mimascota.HistorialMedico
@@ -72,7 +75,10 @@ fun RecordatoriosMascotaScreen(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 12.dp)
         ) {
             items(recordatorios, key = { it.id }) { item ->
-                Card(shape = RoundedCornerShape(10.dp)) {
+                Card(
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.58f))
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -80,8 +86,8 @@ fun RecordatoriosMascotaScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         androidx.compose.foundation.layout.Column(modifier = Modifier.weight(1f)) {
-                            Text("${item.fecha} - ${item.hora}", fontWeight = FontWeight.Bold)
-                            Text(item.descripcion)
+                            Text("${item.fecha} - ${item.hora}", fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(item.descripcion, color = Color.White)
                         }
                         IconButton(onClick = { toDelete = item }) { Icon(Icons.Filled.Delete, "Eliminar") }
                     }
@@ -126,6 +132,17 @@ fun AgregarRecordatorioScreen(
     var showTimePicker by remember { mutableStateOf(false) }
     val dateState = rememberDatePickerState()
     val timeState = rememberTimePickerState(is24Hour = true)
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        focusedLabelColor = Color.White,
+        unfocusedLabelColor = Color.White.copy(alpha = 0.9f),
+        focusedBorderColor = Color.White,
+        unfocusedBorderColor = Color.White.copy(alpha = 0.85f),
+        focusedTrailingIconColor = Color.White,
+        unfocusedTrailingIconColor = Color.White,
+        cursorColor = Color.White
+    )
 
     fun validar(): Boolean {
         errores = listOfNotNull(
@@ -149,6 +166,7 @@ fun AgregarRecordatorioScreen(
             descripcion,
             { descripcion = it },
             label = { Text("Descripcion") },
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
@@ -156,6 +174,7 @@ fun AgregarRecordatorioScreen(
             onValueChange = {},
             readOnly = true,
             label = { Text("Fecha") },
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = { IconButton(onClick = { showDatePicker = true }) { Icon(Icons.Filled.DateRange, "Fecha") } }
         )
@@ -164,6 +183,7 @@ fun AgregarRecordatorioScreen(
             onValueChange = {},
             readOnly = true,
             label = { Text("Hora") },
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = { IconButton(onClick = { showTimePicker = true }) { Icon(Icons.Filled.Edit, "Hora") } }
         )
