@@ -18,6 +18,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -70,7 +73,9 @@ fun currentDate(): String = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).
 
 fun currentTime(): String = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
 
-fun formatDate(millis: Long): String =
-    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(millis))
+fun formatDate(millis: Long): String {
+    val localDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+    return localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.getDefault()))
+}
 
 fun formatTime(hour: Int, minute: Int): String = "%02d:%02d".format(hour, minute)
