@@ -40,7 +40,7 @@ interface RecordatorioDao {
     fun getRecordatoriosByMascota(mascotaId: Int): Flow<List<Recordatorio>>
 
     @Insert
-    suspend fun insert(recordatorio: Recordatorio)
+    suspend fun insert(recordatorio: Recordatorio): Long
 
     @Delete
     suspend fun delete(recordatorio: Recordatorio)

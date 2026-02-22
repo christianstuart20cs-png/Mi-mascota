@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.mimascota.HistorialMedico
@@ -49,7 +50,11 @@ import com.example.mimascota.HistorialMedicoDao
 import com.example.mimascota.R
 import com.example.mimascota.Recordatorio
 import com.example.mimascota.RecordatorioDao
+import com.example.mimascota.reminders.ReminderScheduler
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,6 +128,7 @@ fun AgregarRecordatorioScreen(
     historialDao: HistorialMedicoDao,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var descripcion by remember { mutableStateOf("") }
     var fecha by remember { mutableStateOf(currentDate()) }
@@ -145,11 +151,14 @@ fun AgregarRecordatorioScreen(
     )
 
     fun validar(): Boolean {
+        val triggerAtMillis = parseReminderDateTimeMillis(fecha, hora)
         errores = listOfNotNull(
             if (descripcion.isBlank()) "Descripcion obligatoria." else null,
             if (fecha.isBlank()) "Fecha obligatoria." else null,
             if (hora.isBlank()) "Hora obligatoria." else null,
-            if (mascotaId <= 0) "Mascota invalida." else null
+            if (mascotaId <= 0) "Mascota invalida." else null,
+            if (triggerAtMillis == null) "Fecha u hora invalida." else null,
+            if (triggerAtMillis != null && triggerAtMillis <= System.currentTimeMillis()) "El recordatorio debe ser futuro." else null
         )
         return errores.isEmpty()
     }
@@ -194,7 +203,7 @@ fun AgregarRecordatorioScreen(
                 if (!validar()) return@Button
                 scope.launch {
                     val descripcionLimpia = descripcion.trim()
-                    recordatorioDao.insert(
+                    val recordatorioId = recordatorioDao.insert(
                         Recordatorio(
                             mascotaId = mascotaId,
                             fecha = fecha,
@@ -202,6 +211,14 @@ fun AgregarRecordatorioScreen(
                             descripcion = descripcionLimpia
                         )
                     )
+                    parseReminderDateTimeMillis(fecha, hora)?.let { triggerAtMillis ->
+                        ReminderScheduler.scheduleReminder(
+                            context = context,
+                            reminderId = recordatorioId.toInt(),
+                            description = descripcionLimpia,
+                            triggerAtMillis = triggerAtMillis
+                        )
+                    }
                     historialDao.insert(
                         HistorialMedico(
                             mascotaId = mascotaId,
@@ -245,4 +262,12 @@ fun AgregarRecordatorioScreen(
             text = { TimePicker(state = timeState) }
         )
     }
+}
+
+private fun parseReminderDateTimeMillis(fecha: String, hora: String): Long? {
+    return runCatching {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+        val localDateTime = LocalDateTime.parse("$fecha $hora", formatter)
+        localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    }.getOrNull()
 }
