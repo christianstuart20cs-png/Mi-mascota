@@ -1,5 +1,6 @@
 package com.example.mimascota.ui.screens
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,6 +55,7 @@ fun MascotaFormScreen(
     mascotaId: Int?,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val mascota by produceState<Mascota?>(initialValue = null, key1 = mascotaId) {
         value = mascotaId?.let { mascotaDao.getById(it) }
@@ -89,8 +92,16 @@ fun MascotaFormScreen(
     }
 
     val picker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri -> fotoUri = uri }
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri ->
+            if (uri != null) {
+                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                runCatching {
+                    context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                }
+                fotoUri = uri
+            }
+        }
     )
 
     fun validar(): Double? {
@@ -152,7 +163,7 @@ fun MascotaFormScreen(
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { picker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
+        Button(onClick = { picker.launch(arrayOf("image/*")) }, modifier = Modifier.fillMaxWidth()) {
             Text("Seleccionar foto")
         }
         fotoUri?.let {
