@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.font.FontWeight
@@ -63,6 +65,17 @@ fun MascotaFormScreen(
     var peso by remember { mutableStateOf("") }
     var fotoUri by remember { mutableStateOf<Uri?>(null) }
     var errores by remember { mutableStateOf<List<String>>(emptyList()) }
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        focusedLabelColor = Color.White,
+        unfocusedLabelColor = Color.White.copy(alpha = 0.9f),
+        focusedBorderColor = Color.White,
+        unfocusedBorderColor = Color.White.copy(alpha = 0.85f),
+        focusedTrailingIconColor = Color.White,
+        unfocusedTrailingIconColor = Color.White,
+        cursorColor = Color.White
+    )
 
     LaunchedEffect(mascota?.id) {
         mascota?.let {
@@ -104,16 +117,29 @@ fun MascotaFormScreen(
                 }
             }
         )
-        OutlinedTextField(nombre, { nombre = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            nombre,
+            { nombre = it },
+            label = { Text("Nombre") },
+            colors = fieldColors,
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(modifier = Modifier.height(8.dp))
         TipoAnimalDropdown(selectedTipo = tipo, onTipoSelected = { tipo = it })
         Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(raza, { raza = it }, label = { Text("Raza") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            raza,
+            { raza = it },
+            label = { Text("Raza") },
+            colors = fieldColors,
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             descripcion,
             { descripcion = it },
             label = { Text("Descripcion") },
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -122,6 +148,7 @@ fun MascotaFormScreen(
             onValueChange = { peso = it },
             label = { Text("Peso (kg)") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -168,16 +195,31 @@ fun MascotaFormScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TipoAnimalDropdown(selectedTipo: String, onTipoSelected: (String) -> Unit) {
+private fun TipoAnimalDropdown(
+    selectedTipo: String,
+    onTipoSelected: (String) -> Unit
+) {
     val options = listOf("Perro", "Gato", "Ave", "Pez", "Conejo", "Hamster", "Tortuga", "Caballo", "Serpiente")
     var expanded by remember { mutableStateOf(false) }
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        focusedLabelColor = Color.White,
+        unfocusedLabelColor = Color.White.copy(alpha = 0.9f),
+        focusedBorderColor = Color.White,
+        unfocusedBorderColor = Color.White.copy(alpha = 0.85f),
+        focusedTrailingIconColor = Color.White,
+        unfocusedTrailingIconColor = Color.White,
+        cursorColor = Color.White
+    )
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
         OutlinedTextField(
             value = selectedTipo,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Tipo de animal") },
+            label = { Text("Mascota") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            colors = fieldColors,
             modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable).fillMaxWidth()
         )
         androidx.compose.material3.DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
