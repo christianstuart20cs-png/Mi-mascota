@@ -1,253 +1,217 @@
-}
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.Dao
-import androidx.room.Query
-import androidx.room.Insert
-import androidx.room.Update
-import androidx.room.Delete
-import androidx.room.Database
-import androidx.room.RoomDatabase
+package com.example.mimascota
 
-import androidx.compose.runtime.*
-import androidx.compose.material3.*
-import androidx.compose.foundation.layout.*
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.ui.res.painterResource
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardActions
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.room.Room
+import coil.compose.AsyncImage
+import com.example.mimascota.ui.theme.MiMascotaTheme
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
-@Entity(
-    tableName = "historial_medico",
-    foreignKeys = [
-        ForeignKey(
-            entity = Mascota::class,
-            parentColumns = ["id"],
-            childColumns = ["mascotaId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
-    indices = [Index("mascotaId")]
-)
-data class HistorialMedico(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val mascotaId: Int,
-    val fecha: String,
-    val sintoma: String,
-    val tratamiento: String
-)
-
-@Entity(
-    tableName = "recordatorios",
-    foreignKeys = [
-        ForeignKey(
-            entity = Mascota::class,
-            parentColumns = ["id"],
-            childColumns = ["mascotaId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
-    indices = [Index("mascotaId")]
-)
-data class Recordatorio(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val mascotaId: Int,
-    val fecha: String,
-    val hora: String,
-    val descripcion: String
-)
-
-@Dao
-interface MascotaDao {
-    @Query("SELECT * FROM mascotas")
-    fun getAll(): List<Mascota>
-
-    @Query("SELECT * FROM mascotas WHERE id = :id")
-    fun getById(id: Int): Mascota?
-
-    @Insert
-    fun insert(mascota: Mascota)
-
-    @Update
-    fun update(mascota: Mascota)
-
-    @Delete
-    fun delete(mascota: Mascota)
-
-@Dao
-interface HistorialMedicoDao {
-    @Query("SELECT * FROM historial_medico WHERE mascotaId = :mascotaId")
-    fun getHistorialByMascota(mascotaId: Int): List<HistorialMedico>
-
-    @Insert
-    fun insert(historial: HistorialMedico)
-}
-
-@Dao
-interface RecordatorioDao {
-    @Query("SELECT * FROM recordatorios WHERE mascotaId = :mascotaId ORDER BY fecha DESC")
-    fun getRecordatoriosByMascota(mascotaId: Int): List<Recordatorio>
-
-    @Insert
-    fun insert(recordatorio: Recordatorio)
-
-    @Delete
-    fun delete(recordatorio: Recordatorio)
-}
-
-@Database(entities = [Mascota::class, HistorialMedico::class, Recordatorio::class], version = 6)
-abstract class MascotaDatabase : RoomDatabase() {
-    abstract fun mascotaDao(): MascotaDao
-    abstract fun historialMedicoDao(): HistorialMedicoDao
-    abstract fun recordatorioDao(): RecordatorioDao
-}
-
-/* ------------------ MAIN ------------------ */
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        val db = Room.databaseBuilder(
+    private val db by lazy {
+        Room.databaseBuilder(
             applicationContext,
             MascotaDatabase::class.java,
             "mascotas-db"
-        ).fallbackToDestructiveMigration().allowMainThreadQueries().build()
+        ).build()
+    }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
-                AppNavHost(db)
+            MiMascotaTheme {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    AppNavHost(db)
+                }
             }
         }
     }
 }
 
-/* ------------------ NAVIGATION & NOTIFICATION SYSTEM ------------------ */
 @Composable
 fun AppNavHost(db: MascotaDatabase) {
     val navController = rememberNavController()
-    val context = LocalContext.current
-    
-    // Sistema de notificaciones para recordatorios
-    var activeNotification by remember { mutableStateOf<Recordatorio?>(null) }
-    var notificationShowCount by remember { mutableStateOf(0) }
-    var lastNotificationTime by remember { mutableStateOf(0L) }
-    
-    LaunchedEffect(Unit) {
-        while (true) {
-            kotlinx.coroutines.delay(10000) // Chequear cada 10 segundos
-            val now = java.util.Calendar.getInstance()
-            val currentDate = String.format("%02d/%02d/%04d", now.get(java.util.Calendar.DAY_OF_MONTH), now.get(java.util.Calendar.MONTH) + 1, now.get(java.util.Calendar.YEAR))
-            val currentTime = String.format("%02d:%02d", now.get(java.util.Calendar.HOUR_OF_DAY), now.get(java.util.Calendar.MINUTE))
-            
-            val allRecordatorios = db.recordatorioDao().getRecordatoriosByMascota(-1).takeIf { it.isNotEmpty() } ?: emptyList()
-            val recordatoriosHoy = try {
-                val allRecords = mutableListOf<Recordatorio>()
-                val allMascotas = db.mascotaDao().getAll()
-                allMascotas.forEach { mascota ->
-                    allRecords.addAll(db.recordatorioDao().getRecordatoriosByMascota(mascota.id))
-                }
-                allRecords.filter { it.fecha == currentDate && it.hora == currentTime }
-            } catch (e: Exception) {
-                emptyList()
-            }
-                // Aquí terminaba el bloque de notificaciones, eliminar código fuera de lugar
+    NavHost(navController = navController, startDestination = "home") {
+        composable("home") {
+            MiMascotaApp(
+                mascotaDao = db.mascotaDao(),
+                navToAdd = { navController.navigate("add_pet") },
+                navToEdit = { id -> navController.navigate("edit_pet/$id") },
+                navToHistory = { id -> navController.navigate("history/$id") },
+                navToReminders = { id -> navController.navigate("reminders/$id") }
+            )
+        }
+        composable("add_pet") {
+            MascotaFormScreen("Registrar mascota", db.mascotaDao(), null) { navController.popBackStack() }
+        }
+        composable(
+            route = "edit_pet/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStack ->
+            MascotaFormScreen(
+                title = "Editar mascota",
+                mascotaDao = db.mascotaDao(),
+                mascotaId = backStack.arguments?.getInt("id")
+            ) { navController.popBackStack() }
+        }
+        composable(
+            route = "history/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStack ->
+            HistorialMedicoScreen(
+                mascotaId = backStack.arguments?.getInt("id") ?: -1,
+                historialDao = db.historialMedicoDao()
+            ) { navController.popBackStack() }
+        }
+        composable(
+            route = "reminders/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStack ->
+            val mascotaId = backStack.arguments?.getInt("id") ?: -1
+            RecordatoriosMascotaScreen(
+                mascotaId = mascotaId,
+                recordatorioDao = db.recordatorioDao(),
+                onBack = { navController.popBackStack() },
+                onAdd = { navController.navigate("add_reminder/$mascotaId") }
+            )
+        }
+        composable(
+            route = "add_reminder/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStack ->
+            AgregarRecordatorioScreen(
+                mascotaId = backStack.arguments?.getInt("id") ?: -1,
+                recordatorioDao = db.recordatorioDao(),
+                historialDao = db.historialMedicoDao()
+            ) { navController.popBackStack() }
+        }
     }
 }
 
-/* ------------------ UI - LISTA DE MASCOTAS ------------------ */
 @Composable
-fun MiMascotaApp(mascotaDao: MascotaDao, navController: NavController) {
-    var mascotas by remember { mutableStateOf(mascotaDao.getAll()) }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-    var mascotaToDelete by remember { mutableStateOf<Mascota?>(null) }
-
-    LaunchedEffect(navController) {
-        navController.currentBackStackEntryFlow.collect {
-            mascotas = mascotaDao.getAll()
-        }
-    }
+fun MiMascotaApp(
+    mascotaDao: MascotaDao,
+    navToAdd: () -> Unit,
+    navToEdit: (Int) -> Unit,
+    navToHistory: (Int) -> Unit,
+    navToReminders: (Int) -> Unit
+) {
+    val mascotas by mascotaDao.getAll().collectAsStateEmpty()
+    val scope = rememberCoroutineScope()
+    var toDelete by remember { mutableStateOf<Mascota?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.una_veterinaria_sonr),
-            contentDescription = "Veterinaria sonriendo",
+            contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Text("Mascotas Registradas", style = MaterialTheme.typography.headlineMedium, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyColumn {
-                items(mascotas) { mascota ->
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = slideInVertically() + fadeIn(),
-                        exit = slideOutVertically() + fadeOut()
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            Text("Mascotas registradas", style = MaterialTheme.typography.headlineMedium)
+            Spacer(modifier = Modifier.height(12.dp))
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(mascotas, key = { it.id }) { mascota ->
+                    AnimatedVisibility(visible = true, enter = slideInVertically() + fadeIn(), exit = slideOutVertically() + fadeOut()) {
+                        Card(shape = RoundedCornerShape(10.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                 mascota.fotoUri?.let {
                                     AsyncImage(
                                         model = it,
-                                        contentDescription = "Foto de ${mascota.nombre}",
-                                        modifier = Modifier
-                                            .size(80.dp)
-                                            .padding(end = 12.dp),
+                                        contentDescription = "Foto ${mascota.nombre}",
+                                        modifier = Modifier.size(80.dp).padding(end = 12.dp),
                                         contentScale = ContentScale.Crop
                                     )
                                 }
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text("${mascota.nombre} - ${mascota.tipo} - ${mascota.raza} - ${mascota.pesoKg} kg", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                    
-                                    Row(modifier = Modifier.padding(top = 8.dp)) {
-                                        Button(onClick = { navController.navigate("historial/${mascota.id}") }, modifier = Modifier.weight(1f)) {
-                                            Text("Historial", fontWeight = FontWeight.Bold)
-                                        }
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Button(onClick = { navController.navigate("recordatorios/${mascota.id}") }, modifier = Modifier.weight(1f)) {
-                                            Text("Recordatorios", fontWeight = FontWeight.Bold)
-                                        }
+                                    Text("${mascota.nombre} - ${mascota.tipo}", fontWeight = FontWeight.Bold)
+                                    Text("${mascota.raza} - ${mascota.pesoKg} kg")
+                                    Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Button(onClick = { navToHistory(mascota.id) }, modifier = Modifier.weight(1f)) { Text("Historial") }
+                                        Button(onClick = { navToReminders(mascota.id) }, modifier = Modifier.weight(1f)) { Text("Recordatorios") }
                                     }
-                                    Row(modifier = Modifier.padding(top = 8.dp)) {
-                                        IconButton(onClick = { navController.navigate("editar_mascota/${mascota.id}") }) {
-                                            Icon(Icons.Filled.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
-                                        }
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        IconButton(onClick = {
-                                            mascotaToDelete = mascota
-                                            showDeleteConfirm = true
-                                        }) {
-                                            Icon(Icons.Filled.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
-                                        }
+                                    Row {
+                                        IconButton(onClick = { navToEdit(mascota.id) }) { Icon(Icons.Filled.Edit, "Editar") }
+                                        IconButton(onClick = { toDelete = mascota }) { Icon(Icons.Filled.Delete, "Eliminar") }
                                     }
                                 }
                             }
@@ -256,46 +220,42 @@ fun MiMascotaApp(mascotaDao: MascotaDao, navController: NavController) {
                 }
             }
         }
-
-        // Botón flotante para agregar mascota (más arriba)
-        FloatingActionButton(
-            onClick = { navController.navigate("agregar_mascota") },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 140.dp, end = 16.dp) // sube el botón aún más
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = "Agregar mascota")
+        FloatingActionButton(onClick = navToAdd, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
+            Icon(Icons.Filled.Add, contentDescription = "Agregar")
         }
     }
 
-    if (showDeleteConfirm && mascotaToDelete != null) {
+    toDelete?.let { mascota ->
         AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Confirmar eliminación", fontWeight = FontWeight.Bold) },
-            text = { Text("¿Deseas eliminar a ${mascotaToDelete?.nombre}? Esta acción no se puede deshacer.", fontWeight = FontWeight.Bold) },
+            onDismissRequest = { toDelete = null },
+            title = { Text("Eliminar mascota") },
+            text = { Text("Se eliminara ${mascota.nombre} con su historial y recordatorios.") },
             confirmButton = {
                 TextButton(onClick = {
-                    mascotaToDelete?.let { mascota ->
+                    scope.launch {
                         mascotaDao.delete(mascota)
-                        mascotas = mascotaDao.getAll()
+                        toDelete = null
                     }
-                    showDeleteConfirm = false
-                    mascotaToDelete = null
-                }) { Text("Sí, eliminar") }
+                }) { Text("Eliminar") }
             },
-            dismissButton = {
-                TextButton(onClick = { 
-                    showDeleteConfirm = false
-                    mascotaToDelete = null
-                }) { Text("Cancelar") }
-            }
-            )
-}
+            dismissButton = { TextButton(onClick = { toDelete = null }) { Text("Cancelar") } }
+        )
+    }
 }
 
-/* ------------------ AGREGAR MASCOTA SCREEN ------------------ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AgregarMascotaScreen(mascotaDao: MascotaDao, navController: NavController) {
+fun MascotaFormScreen(
+    title: String,
+    mascotaDao: MascotaDao,
+    mascotaId: Int?,
+    onBack: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val mascota by produceState<Mascota?>(initialValue = null, key1 = mascotaId) {
+        value = mascotaId?.let { mascotaDao.getById(it) }
+    }
+
     var nombre by remember { mutableStateOf("") }
     var tipo by remember { mutableStateOf("") }
     var raza by remember { mutableStateOf("") }
@@ -304,21 +264,30 @@ fun AgregarMascotaScreen(mascotaDao: MascotaDao, navController: NavController) {
     var fotoUri by remember { mutableStateOf<Uri?>(null) }
     var errores by remember { mutableStateOf<List<String>>(emptyList()) }
 
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri: Uri? ->
-            fotoUri = uri
+    LaunchedEffect(mascota?.id) {
+        mascota?.let {
+            nombre = it.nombre
+            tipo = it.tipo
+            raza = it.raza
+            descripcion = it.descripcion
+            peso = it.pesoKg.toString()
+            fotoUri = it.fotoUri?.let(Uri::parse)
         }
+    }
+
+    val picker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri -> fotoUri = uri }
     )
 
-    fun validarFormulario(): Boolean {
+    fun validar(): Boolean {
+        val valorPeso = peso.toDoubleOrNull()
         errores = listOfNotNull(
-            if (nombre.isBlank()) "El nombre es requerido" else null,
-            if (tipo.isBlank()) "El tipo de animal es requerido" else null,
-            if (raza.isBlank()) "La raza es requerida" else null,
-            if (descripcion.isBlank()) "La descripción es requerida" else null,
-            if (peso.isBlank()) "El peso es requerido" else null,
-            if (peso.toDoubleOrNull() == null && peso.isNotBlank()) "El peso debe ser un número válido" else null
+            if (nombre.isBlank()) "Nombre obligatorio." else null,
+            if (tipo.isBlank()) "Tipo obligatorio." else null,
+            if (raza.isBlank()) "Raza obligatoria." else null,
+            if (descripcion.isBlank()) "Descripcion obligatoria." else null,
+            if (valorPeso == null || valorPeso <= 0.0) "Peso invalido." else null
         )
         return errores.isEmpty()
     }
@@ -326,469 +295,339 @@ fun AgregarMascotaScreen(mascotaDao: MascotaDao, navController: NavController) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.una_veterinaria_sonr),
-            contentDescription = "Veterinaria sonriendo",
+            contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+        Column(modifier = Modifier.padding(16.dp)) {
+            TopAppBar(
+                title = { Text(title, fontWeight = FontWeight.ExtraBold) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                    }
                 }
-                Text("Registrar Nueva Mascota", style = MaterialTheme.typography.headlineMedium, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre", fontWeight = FontWeight.Bold, fontSize = 18.sp) }, modifier = Modifier.fillMaxWidth(), textStyle = LocalTextStyle.current.copy(fontSize = 18.sp))
+            )
+            OutlinedTextField(nombre, { nombre = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
             TipoAnimalDropdown(selectedTipo = tipo, onTipoSelected = { tipo = it })
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(value = raza, onValueChange = { raza = it }, label = { Text("Raza", fontWeight = FontWeight.Bold, fontSize = 18.sp) }, modifier = Modifier.fillMaxWidth(), textStyle = LocalTextStyle.current.copy(fontSize = 18.sp))
+            OutlinedTextField(raza, { raza = it }, label = { Text("Raza") }, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(value = descripcion, onValueChange = { descripcion = it }, label = { Text("Descripción", fontWeight = FontWeight.Bold, fontSize = 18.sp) }, modifier = Modifier.fillMaxWidth(), textStyle = LocalTextStyle.current.copy(fontSize = 18.sp))
+            OutlinedTextField(descripcion, { descripcion = it }, label = { Text("Descripcion") }, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(value = peso, onValueChange = { peso = it }, label = { Text("Peso (kg)", fontWeight = FontWeight.Bold, fontSize = 18.sp) }, modifier = Modifier.fillMaxWidth(), textStyle = LocalTextStyle.current.copy(fontSize = 18.sp))
-            
-            AnimatedVisibility(visible = errores.isNotEmpty()) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                    errores.forEach { error ->
-                        Text(error, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-                    }
-                }
-            }
-            
+            OutlinedTextField(peso, { peso = it }, label = { Text("Peso (kg)") }, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = { imagePickerLauncher.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
-                Text("Seleccionar foto", fontWeight = FontWeight.Bold)
-            }
+            Button(onClick = { picker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text("Seleccionar foto") }
             fotoUri?.let {
                 AsyncImage(
                     model = it,
-                    contentDescription = "Foto de la mascota",
-                    modifier = Modifier
-                        .size(128.dp)
-                        .padding(top = 8.dp),
+                    contentDescription = "Foto mascota",
+                    modifier = Modifier.size(120.dp).padding(top = 8.dp),
                     contentScale = ContentScale.Crop
                 )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            AnimatedVisibility(visible = errores.isNotEmpty()) {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    errores.forEach { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
             Button(onClick = {
-                if (validarFormulario()) {
-                    val nuevaMascota = Mascota(
-                        nombre = nombre,
-                        tipo = tipo,
-                        raza = raza,
-                        descripcion = descripcion,
-                        pesoKg = peso.toDoubleOrNull() ?: 0.0,
-                        fotoUri = fotoUri?.toString()
-                    )
-                    mascotaDao.insert(nuevaMascota)
-                    navController.popBackStack()
+                if (!validar()) return@Button
+                val payload = Mascota(
+                    id = mascota?.id ?: 0,
+                    nombre = nombre.trim(),
+                    tipo = tipo,
+                    raza = raza.trim(),
+                    descripcion = descripcion.trim(),
+                    pesoKg = peso.toDouble(),
+                    fotoUri = fotoUri?.toString()
+                )
+                scope.launch {
+                    if (mascota == null) mascotaDao.insert(payload) else mascotaDao.update(payload)
+                    onBack()
                 }
             }, modifier = Modifier.fillMaxWidth()) {
-                Text("Guardar mascota", fontWeight = FontWeight.Bold)
+                Text(if (mascota == null) "Guardar mascota" else "Actualizar mascota")
             }
         }
     }
 }
 
-/* ------------------ HISTORIAL SCREEN ------------------ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistorialMedicoScreen(mascotaId: Int, historialDao: HistorialMedicoDao, navController: NavController) {
+fun HistorialMedicoScreen(
+    mascotaId: Int,
+    historialDao: HistorialMedicoDao,
+    onBack: () -> Unit
+) {
     val context = LocalContext.current
-    var fecha by remember { mutableStateOf("") }
-    var showDatePicker by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState()
+    val scope = rememberCoroutineScope()
+    val historial by historialDao.getHistorialByMascota(mascotaId).collectAsStateEmpty()
+    var fecha by remember { mutableStateOf(currentDate()) }
     var sintoma by remember { mutableStateOf("") }
     var tratamiento by remember { mutableStateOf("") }
     var errores by remember { mutableStateOf<List<String>>(emptyList()) }
-
-    var historial by remember { mutableStateOf(historialDao.getHistorialByMascota(mascotaId)) }
-
-    fun validarFormularioHistorial(): Boolean {
-        errores = listOfNotNull(
-            if (fecha.isBlank()) "La fecha es requerida" else null,
-            if (sintoma.isBlank()) "El síntoma es requerido" else null,
-            if (tratamiento.isBlank()) "El tratamiento es requerido" else null
-        )
-        return errores.isEmpty()
-    }
-
-    fun compartirPorWhatsApp() {
-        if (historial.isEmpty()) {
-            return
-        }
-        
-        val mensaje = StringBuilder()
-        mensaje.append("📋 *HISTORIAL MÉDICO* 📋\n\n")
-        historial.forEach { h ->
-            mensaje.append("📅 Fecha: ${h.fecha}\n")
-            mensaje.append("🤒 Síntoma: ${h.sintoma}\n")
-            mensaje.append("💊 Tratamiento: ${h.tratamiento}\n")
-            mensaje.append("─────────────────────\n\n")
-        }
-        
-        val intent = android.content.Intent().apply {
-            action = android.content.Intent.ACTION_SEND
-            putExtra(android.content.Intent.EXTRA_TEXT, mensaje.toString())
-            type = "text/plain"
-            `package` = "com.whatsapp"
-        }
-        
-        try {
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            // Si WhatsApp no está instalado, abrir Play Store
-            val playStoreIntent = android.content.Intent(
-                android.content.Intent.ACTION_VIEW,
-                android.net.Uri.parse("https://play.google.com/store/apps/details?id=com.whatsapp")
-            )
-            context.startActivity(playStoreIntent)
-        }
-    }
-
-    fun formatearFecha(millis: Long): String {
-        val calendar = java.util.Calendar.getInstance()
-        calendar.timeInMillis = millis
-        val day = String.format("%02d", calendar.get(java.util.Calendar.DAY_OF_MONTH))
-        val month = String.format("%02d", calendar.get(java.util.Calendar.MONTH) + 1)
-        val year = calendar.get(java.util.Calendar.YEAR)
-        return "$day/$month/$year"
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(id = R.drawable.planilla_medica),
-            contentDescription = "Planilla médica",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
-                }
-                Text("Historial médico", style = MaterialTheme.typography.headlineMedium, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
-                IconButton(onClick = { compartirPorWhatsApp() }) {
-                    Icon(Icons.Filled.Share, contentDescription = "Compartir por WhatsApp")
-                }
-            }
-
-            OutlinedTextField(
-                value = fecha,
-                onValueChange = {},
-                label = { Text("Fecha", fontWeight = FontWeight.Bold) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                readOnly = true,
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.secondary,
-                    focusedLabelColor = MaterialTheme.colorScheme.primary,
-                    unfocusedLabelColor = MaterialTheme.colorScheme.secondary
-                ),
-                trailingIcon = {
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(Icons.Filled.DateRange, contentDescription = "Seleccionar fecha", tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            )
-            if (showDatePicker) {
-                DatePickerDialog(
-                    onDismissRequest = { showDatePicker = false },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            datePickerState.selectedDateMillis?.let {
-                                fecha = formatearFecha(it)
-                            }
-                            showDatePicker = false
-                        }) { Text("Seleccionar", fontWeight = FontWeight.Bold) }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
-                    }
-                ) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text("Selecciona la fecha del historial", fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(bottom = 8.dp))
-                        DatePicker(state = datePickerState)
-                    }
-                }
-            }
-            OutlinedTextField(value = sintoma, onValueChange = { sintoma = it }, label = { Text("Síntoma", fontWeight = FontWeight.Bold, fontSize = 18.sp) }, modifier = Modifier.fillMaxWidth(), textStyle = LocalTextStyle.current.copy(fontSize = 18.sp))
-            OutlinedTextField(value = tratamiento, onValueChange = { tratamiento = it }, label = { Text("Tratamiento", fontWeight = FontWeight.Bold, fontSize = 18.sp) }, modifier = Modifier.fillMaxWidth(), textStyle = LocalTextStyle.current.copy(fontSize = 18.sp))
-
-            AnimatedVisibility(visible = errores.isNotEmpty()) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                    errores.forEach { error ->
-                        Text(error, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = {
-                if (mascotaId > 0 && validarFormularioHistorial()) {
-                    val nuevoHistorial = HistorialMedico(mascotaId = mascotaId, fecha = fecha, sintoma = sintoma, tratamiento = tratamiento)
-                    historialDao.insert(nuevoHistorial)
-                    historial = historialDao.getHistorialByMascota(mascotaId)
-                    fecha = ""; sintoma = ""; tratamiento = ""
-                    errores = emptyList()
-                }
-            }, modifier = Modifier.fillMaxWidth()) {
-                Text("Guardar historial", fontWeight = FontWeight.Bold)
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Historial registrado:", style = MaterialTheme.typography.titleMedium, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            LazyColumn {
-                items(historial) { h ->
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = slideInVertically() + fadeIn(),
-                        exit = slideOutVertically() + fadeOut()
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text("${h.fecha} - ${h.sintoma}: ${h.tratamiento}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/* ------------------ RECORDATORIOS MASCOTA SCREEN ------------------ */
-@Composable
-fun RecordatoriosMascotaScreen(mascotaId: Int, recordatorioDao: RecordatorioDao, navController: NavController) {
-    var recordatorios by remember { mutableStateOf(recordatorioDao.getRecordatoriosByMascota(mascotaId)) }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-    var recordatorioToDelete by remember { mutableStateOf<Recordatorio?>(null) }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(id = R.drawable.planilla_medica),
-            contentDescription = "Planilla médica",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
-                }
-                Text("Recordatorios", style = MaterialTheme.typography.headlineMedium, fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(recordatorios) { recordatorio ->
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = slideInVertically() + fadeIn(),
-                        exit = slideOutVertically() + fadeOut()
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("${recordatorio.fecha} - ${recordatorio.hora}", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(recordatorio.descripcion, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                }
-                                IconButton(onClick = {
-                                    recordatorioToDelete = recordatorio
-                                    showDeleteConfirm = true
-                                }) {
-                                    Icon(Icons.Filled.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = { navController.navigate("agregar_recordatorio/$mascotaId") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 80.dp) // sube el botón aún más
-            ) {
-                Text("Agregar Recordatorio", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-        }
-    }
-
-    if (showDeleteConfirm && recordatorioToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Confirmar eliminación", fontWeight = FontWeight.Bold) },
-            text = { Text("¿Deseas eliminar este recordatorio?", fontWeight = FontWeight.Bold) },
-            confirmButton = {
-                TextButton(onClick = {
-                    recordatorioToDelete?.let { recordatorio ->
-                        recordatorioDao.delete(recordatorio)
-                        recordatorios = recordatorioDao.getRecordatoriosByMascota(mascotaId)
-                    }
-                    showDeleteConfirm = false
-                    recordatorioToDelete = null
-                }) { Text("Sí, eliminar") }
-            },
-            dismissButton = {
-                TextButton(onClick = { 
-                    showDeleteConfirm = false
-                    recordatorioToDelete = null
-                }) { Text("Cancelar") }
-            }
-        )
-    }
-}
-
-/* ------------------ AGREGAR RECORDATORIO SCREEN ------------------ */
-@Composable
-fun AgregarRecordatorioScreen(
-    mascotaId: Int,
-    recordatorioDao: RecordatorioDao,
-    navController: NavController
-) {
-    // Acceso a la base de datos para historial
-    val context = LocalContext.current
-    val db = remember {
-        androidx.room.Room.databaseBuilder(
-            context.applicationContext,
-            MascotaDatabase::class.java,
-            "mascotas-db"
-        ).fallbackToDestructiveMigration().allowMainThreadQueries().build()
-    }
-    var descripcion by remember { mutableStateOf("") }
-    var fecha by remember { mutableStateOf("") }
-    var hora by remember { mutableStateOf("") }
-    var errores by remember { mutableStateOf<List<String>>(emptyList()) }
     var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState()
-    val timePickerState = rememberTimePickerState()
+    val dateState = rememberDatePickerState()
 
-    fun validarFormularioRecordatorio(): Boolean {
+    fun validar(): Boolean {
         errores = listOfNotNull(
-            if (descripcion.isBlank()) "La descripción es requerida" else null,
-            if (fecha.isBlank()) "La fecha es requerida" else null,
-            if (hora.isBlank()) "La hora es requerida" else null
+            if (fecha.isBlank()) "Fecha obligatoria." else null,
+            if (sintoma.isBlank()) "Sintoma obligatorio." else null,
+            if (tratamiento.isBlank()) "Tratamiento obligatorio." else null
         )
         return errores.isEmpty()
+    }
+
+    fun share() {
+        if (historial.isEmpty()) return
+        val body = buildString {
+            appendLine("HISTORIAL MEDICO")
+            appendLine()
+            historial.forEach {
+                appendLine("Fecha: ${it.fecha}")
+                appendLine("Sintoma: ${it.sintoma}")
+                appendLine("Tratamiento: ${it.tratamiento}")
+                appendLine("-----")
+            }
+        }
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, body)
+        }
+        context.startActivity(Intent.createChooser(intent, "Compartir historial"))
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.planilla_medica),
-            contentDescription = "Planilla médica",
+            contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
-                }
-                Text("Agregar Recordatorio", style = MaterialTheme.typography.headlineMedium, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(value = descripcion, onValueChange = { descripcion = it }, label = { Text("Descripción", fontWeight = FontWeight.Bold, fontSize = 18.sp) }, modifier = Modifier.fillMaxWidth(), textStyle = LocalTextStyle.current.copy(fontSize = 18.sp))
-            Spacer(modifier = Modifier.height(8.dp))
+            TopAppBar(
+                title = { Text("Historial medico", fontWeight = FontWeight.ExtraBold) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, "Volver") }
+                },
+                actions = { IconButton(onClick = { share() }) { Icon(Icons.Filled.Share, "Compartir") } }
+            )
             OutlinedTextField(
                 value = fecha,
                 onValueChange = {},
-                label = { Text("Fecha", fontWeight = FontWeight.Bold) },
-                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Fecha") },
                 readOnly = true,
+                modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Seleccionar fecha")
-                    }
+                    IconButton(onClick = { showDatePicker = true }) { Icon(Icons.Filled.DateRange, "Fecha") }
                 }
             )
-            OutlinedTextField(
-                value = hora,
-                onValueChange = {},
-                label = { Text("Hora", fontWeight = FontWeight.Bold) },
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = true,
-                trailingIcon = {
-                    IconButton(onClick = { showTimePicker = true }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Seleccionar hora")
-                    }
-                }
-            )
-
+            OutlinedTextField(sintoma, { sintoma = it }, label = { Text("Sintoma") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(tratamiento, { tratamiento = it }, label = { Text("Tratamiento") }, modifier = Modifier.fillMaxWidth())
             AnimatedVisibility(visible = errores.isNotEmpty()) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                    errores.forEach { error ->
-                        Text(error, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-                    }
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    errores.forEach { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Button(onClick = {
-                if (mascotaId > 0 && validarFormularioRecordatorio()) {
-                    val nuevoRecordatorio = Recordatorio(
-                        mascotaId = mascotaId,
-                        descripcion = descripcion,
-                        fecha = fecha,
-                        hora = hora
+                if (!validar() || mascotaId <= 0) return@Button
+                scope.launch {
+                    historialDao.insert(
+                        HistorialMedico(
+                            mascotaId = mascotaId,
+                            fecha = fecha,
+                            sintoma = sintoma.trim(),
+                            tratamiento = tratamiento.trim()
+                        )
                     )
-                    recordatorioDao.insert(nuevoRecordatorio)
-                    // Crear evento en historial médico
-                    val eventoHistorial = HistorialMedico(
-                        mascotaId = mascotaId,
-                        fecha = fecha,
-                        sintoma = "Recordatorio creado",
-                        tratamiento = descripcion
-                    )
-                    db.historialMedicoDao().insert(eventoHistorial)
-                    navController.popBackStack()
+                    sintoma = ""
+                    tratamiento = ""
                 }
-            }, modifier = Modifier.fillMaxWidth()) {
-                Text("Guardar Recordatorio", fontWeight = FontWeight.Bold)
+            }, modifier = Modifier.fillMaxWidth()) { Text("Guardar historial") }
+            Spacer(modifier = Modifier.height(12.dp))
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(historial, key = { it.id }) { item ->
+                    Card(shape = RoundedCornerShape(10.dp)) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(item.fecha, fontWeight = FontWeight.Bold)
+                            Text("Sintoma: ${item.sintoma}")
+                            Text("Tratamiento: ${item.tratamiento}")
+                        }
+                    }
+                }
             }
         }
     }
+
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        fecha = formatearFecha(it)
-                    }
+                    dateState.selectedDateMillis?.let { fecha = formatDate(it) }
                     showDatePicker = false
                 }) { Text("OK") }
             },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") } }
+        ) { DatePicker(state = dateState) }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RecordatoriosMascotaScreen(
+    mascotaId: Int,
+    recordatorioDao: RecordatorioDao,
+    onBack: () -> Unit,
+    onAdd: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val recordatorios by recordatorioDao.getRecordatoriosByMascota(mascotaId).collectAsStateEmpty()
+    var toDelete by remember { mutableStateOf<Recordatorio?>(null) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.planilla_medica),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Column(modifier = Modifier.padding(16.dp)) {
+            TopAppBar(
+                title = { Text("Recordatorios", fontWeight = FontWeight.ExtraBold) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, "Volver") } }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(recordatorios, key = { it.id }) { item ->
+                    Card(shape = RoundedCornerShape(10.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("${item.fecha} - ${item.hora}", fontWeight = FontWeight.Bold)
+                                Text(item.descripcion)
+                            }
+                            IconButton(onClick = { toDelete = item }) { Icon(Icons.Filled.Delete, "Eliminar") }
+                        }
+                    }
+                }
             }
-        ) {
-            DatePicker(state = datePickerState)
+            Button(onClick = onAdd, modifier = Modifier.fillMaxWidth()) { Text("Agregar recordatorio") }
         }
+    }
+
+    toDelete?.let { item ->
+        AlertDialog(
+            onDismissRequest = { toDelete = null },
+            title = { Text("Eliminar recordatorio") },
+            text = { Text("Esta accion no se puede deshacer.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    scope.launch {
+                        recordatorioDao.delete(item)
+                        toDelete = null
+                    }
+                }) { Text("Eliminar") }
+            },
+            dismissButton = { TextButton(onClick = { toDelete = null }) { Text("Cancelar") } }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AgregarRecordatorioScreen(
+    mascotaId: Int,
+    recordatorioDao: RecordatorioDao,
+    historialDao: HistorialMedicoDao,
+    onBack: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    var descripcion by remember { mutableStateOf("") }
+    var fecha by remember { mutableStateOf(currentDate()) }
+    var hora by remember { mutableStateOf(currentTime()) }
+    var errores by remember { mutableStateOf<List<String>>(emptyList()) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    val dateState = rememberDatePickerState()
+    val timeState = rememberTimePickerState(is24Hour = true)
+
+    fun validar(): Boolean {
+        errores = listOfNotNull(
+            if (descripcion.isBlank()) "Descripcion obligatoria." else null,
+            if (fecha.isBlank()) "Fecha obligatoria." else null,
+            if (hora.isBlank()) "Hora obligatoria." else null
+        )
+        return errores.isEmpty()
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.planilla_medica),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Column(modifier = Modifier.padding(16.dp)) {
+            TopAppBar(
+                title = { Text("Agregar recordatorio", fontWeight = FontWeight.ExtraBold) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, "Volver") } }
+            )
+            OutlinedTextField(descripcion, { descripcion = it }, label = { Text("Descripcion") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = fecha,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Fecha") },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = { IconButton(onClick = { showDatePicker = true }) { Icon(Icons.Filled.DateRange, "Fecha") } }
+            )
+            OutlinedTextField(
+                value = hora,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Hora") },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = { IconButton(onClick = { showTimePicker = true }) { Icon(Icons.Filled.Edit, "Hora") } }
+            )
+            AnimatedVisibility(visible = errores.isNotEmpty()) {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    errores.forEach { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(onClick = {
+                if (!validar() || mascotaId <= 0) return@Button
+                scope.launch {
+                    recordatorioDao.insert(Recordatorio(mascotaId = mascotaId, fecha = fecha, hora = hora, descripcion = descripcion.trim()))
+                    historialDao.insert(
+                        HistorialMedico(
+                            mascotaId = mascotaId,
+                            fecha = fecha,
+                            sintoma = "Recordatorio creado",
+                            tratamiento = descripcion.trim()
+                        )
+                    )
+                    onBack()
+                }
+            }, modifier = Modifier.fillMaxWidth()) { Text("Guardar recordatorio") }
+        }
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    dateState.selectedDateMillis?.let { fecha = formatDate(it) }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") } }
+        ) { DatePicker(state = dateState) }
     }
 
     if (showTimePicker) {
@@ -796,41 +635,36 @@ fun AgregarRecordatorioScreen(
             onDismissRequest = { showTimePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    hora = formatearHora(timePickerState.hour, timePickerState.minute)
+                    hora = formatTime(timeState.hour, timeState.minute)
                     showTimePicker = false
                 }) { Text("OK") }
             },
-            dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) { Text("Cancelar") }
-            },
-            text = {
-                TimePicker(state = timePickerState)
-            }
+            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("Cancelar") } },
+            text = { TimePicker(state = timeState) }
         )
     }
 }
 
-/* ------------------ DROPDOWN ------------------ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TipoAnimalDropdown(selectedTipo: String, onTipoSelected: (String) -> Unit) {
-    val tipos = listOf("Perro", "Gato", "Ave", "Pez", "Conejo", "Hámster", "Tortuga", "Caballo", "Serpiente")
+    val options = listOf("Perro", "Gato", "Ave", "Pez", "Conejo", "Hamster", "Tortuga", "Caballo", "Serpiente")
     var expanded by remember { mutableStateOf(false) }
-
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
         OutlinedTextField(
             value = selectedTipo,
             onValueChange = {},
-            label = { Text("Tipo de animal", fontWeight = FontWeight.Bold) },
             readOnly = true,
-            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
+            label = { Text("Tipo de animal") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier.menuAnchor().fillMaxWidth()
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            tipos.forEach { tipo ->
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(tipo, fontWeight = FontWeight.Bold) },
+                    text = { Text(option) },
                     onClick = {
-                        onTipoSelected(tipo)
+                        onTipoSelected(option)
                         expanded = false
                     }
                 )
@@ -838,3 +672,11 @@ fun TipoAnimalDropdown(selectedTipo: String, onTipoSelected: (String) -> Unit) {
         }
     }
 }
+
+@Composable
+private fun <T> Flow<List<T>>.collectAsStateEmpty() = collectAsState(initial = emptyList())
+
+private fun currentDate(): String = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+private fun currentTime(): String = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+private fun formatDate(millis: Long): String = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(millis))
+private fun formatTime(hour: Int, minute: Int): String = "%02d:%02d".format(hour, minute)
