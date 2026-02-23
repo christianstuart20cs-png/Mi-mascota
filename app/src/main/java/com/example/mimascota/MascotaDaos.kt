@@ -32,6 +32,12 @@ interface HistorialMedicoDao {
 
     @Insert
     suspend fun insert(historial: HistorialMedico)
+
+    @Update
+    suspend fun update(historial: HistorialMedico)
+
+    @Delete
+    suspend fun delete(historial: HistorialMedico)
 }
 
 @Dao

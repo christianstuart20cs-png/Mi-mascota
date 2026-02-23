@@ -2,6 +2,7 @@ package com.example.mimascota.ui.screens
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,7 +13,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -57,6 +61,8 @@ fun HistorialMedicoScreen(
     var sintoma by remember { mutableStateOf("") }
     var tratamiento by remember { mutableStateOf("") }
     var errores by remember { mutableStateOf<List<String>>(emptyList()) }
+    var editingHistorialId by remember { mutableStateOf<Int?>(null) }
+    var toDelete by remember { mutableStateOf<HistorialMedico?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
     val dateState = rememberDatePickerState()
     val fieldColors = OutlinedTextFieldDefaults.colors(
@@ -141,20 +147,39 @@ fun HistorialMedicoScreen(
             onClick = {
                 if (!validar()) return@Button
                 scope.launch {
-                    historialDao.insert(
-                        HistorialMedico(
-                            mascotaId = mascotaId,
-                            fecha = fecha,
-                            sintoma = sintoma.trim(),
-                            tratamiento = tratamiento.trim()
-                        )
+                    val payload = HistorialMedico(
+                        id = editingHistorialId ?: 0,
+                        mascotaId = mascotaId,
+                        fecha = fecha,
+                        sintoma = sintoma.trim(),
+                        tratamiento = tratamiento.trim()
                     )
+                    if (editingHistorialId == null) {
+                        historialDao.insert(payload)
+                    } else {
+                        historialDao.update(payload)
+                    }
+                    editingHistorialId = null
+                    fecha = currentDate()
                     sintoma = ""
                     tratamiento = ""
                 }
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Guardar historial") }
+        ) { Text(if (editingHistorialId == null) "Guardar historial" else "Actualizar historial") }
+        if (editingHistorialId != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = {
+                    editingHistorialId = null
+                    fecha = currentDate()
+                    sintoma = ""
+                    tratamiento = ""
+                    errores = emptyList()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Cancelar edicion") }
+        }
         Spacer(modifier = Modifier.height(12.dp))
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -167,6 +192,18 @@ fun HistorialMedicoScreen(
                     colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.58f))
                 ) {
                     androidx.compose.foundation.layout.Column(modifier = Modifier.padding(12.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            IconButton(onClick = {
+                                editingHistorialId = item.id
+                                fecha = item.fecha
+                                sintoma = item.sintoma
+                                tratamiento = item.tratamiento
+                                errores = emptyList()
+                            }) { Icon(Icons.Filled.Edit, "Editar", tint = Color.White) }
+                            IconButton(onClick = { toDelete = item }) {
+                                Icon(Icons.Filled.Delete, "Eliminar", tint = Color.White)
+                            }
+                        }
                         Text("Fecha: ${item.fecha}", fontWeight = FontWeight.Bold, color = Color.White)
                         Text("Sintoma: ${item.sintoma}", color = Color.White)
                         Text("Tratamiento: ${item.tratamiento}", color = Color.White)
@@ -187,5 +224,28 @@ fun HistorialMedicoScreen(
             },
             dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") } }
         ) { DatePicker(state = dateState) }
+    }
+
+    toDelete?.let { item ->
+        AlertDialog(
+            onDismissRequest = { toDelete = null },
+            title = { Text("Eliminar historial") },
+            text = { Text("Esta accion no se puede deshacer.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    scope.launch {
+                        historialDao.delete(item)
+                        if (editingHistorialId == item.id) {
+                            editingHistorialId = null
+                            fecha = currentDate()
+                            sintoma = ""
+                            tratamiento = ""
+                        }
+                        toDelete = null
+                    }
+                }) { Text("Eliminar") }
+            },
+            dismissButton = { TextButton(onClick = { toDelete = null }) { Text("Cancelar") } }
+        )
     }
 }

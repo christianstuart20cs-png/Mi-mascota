@@ -97,8 +97,12 @@ fun RecordatoriosMascotaScreen(
                             Text("${item.fecha} - ${item.hora}", fontWeight = FontWeight.Bold, color = Color.White)
                             Text(item.descripcion, color = Color.White)
                         }
-                        IconButton(onClick = { onEdit(item.id) }) { Icon(Icons.Filled.Edit, "Editar") }
-                        IconButton(onClick = { toDelete = item }) { Icon(Icons.Filled.Delete, "Eliminar") }
+                        IconButton(onClick = { onEdit(item.id) }) {
+                            Icon(Icons.Filled.Edit, "Editar", tint = Color.White)
+                        }
+                        IconButton(onClick = { toDelete = item }) {
+                            Icon(Icons.Filled.Delete, "Eliminar", tint = Color.White)
+                        }
                     }
                 }
             }
