@@ -1,4 +1,4 @@
-package com.example.mimascota.ui.screens
+package com.christianstuart.mimascota.ui.screens
 
 import android.content.Intent
 import android.net.Uri
@@ -47,9 +47,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.mimascota.Mascota
-import com.example.mimascota.MascotaDao
-import com.example.mimascota.R
+import com.christianstuart.mimascota.Mascota
+import com.christianstuart.mimascota.MascotaDao
+import com.christianstuart.mimascota.R
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

@@ -1,10 +1,10 @@
-package com.example.mimascota.reminders
+package com.christianstuart.mimascota.reminders
 
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import com.example.mimascota.MainActivity
+import com.christianstuart.mimascota.MainActivity
 
 object ReminderScheduler {
     const val EXTRA_REMINDER_ID = "extra_reminder_id"

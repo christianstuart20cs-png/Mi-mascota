@@ -1,4 +1,4 @@
-package com.example.mimascota.ui.screens
+package com.christianstuart.mimascota.ui.screens
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image

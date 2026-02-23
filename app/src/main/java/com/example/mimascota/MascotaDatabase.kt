@@ -1,4 +1,4 @@
-package com.example.mimascota
+package com.christianstuart.mimascota
 
 import androidx.room.Database
 import androidx.room.migration.Migration

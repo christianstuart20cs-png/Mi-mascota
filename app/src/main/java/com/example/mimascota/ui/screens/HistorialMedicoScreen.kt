@@ -1,4 +1,4 @@
-package com.example.mimascota.ui.screens
+package com.christianstuart.mimascota.ui.screens
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
@@ -42,9 +42,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.mimascota.HistorialMedico
-import com.example.mimascota.HistorialMedicoDao
-import com.example.mimascota.R
+import com.christianstuart.mimascota.HistorialMedico
+import com.christianstuart.mimascota.HistorialMedicoDao
+import com.christianstuart.mimascota.R
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

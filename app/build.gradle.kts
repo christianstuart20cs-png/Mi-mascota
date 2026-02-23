@@ -14,11 +14,11 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.example.mimascota"
+    namespace = "com.christianstuart.mimascota"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.mimascota"
+        applicationId = "com.christianstuart.mimascota"
         minSdk = 30
         targetSdk = 36
         versionCode = 1

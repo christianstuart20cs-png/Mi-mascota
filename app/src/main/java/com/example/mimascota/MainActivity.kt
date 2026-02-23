@@ -1,4 +1,4 @@
-package com.example.mimascota
+package com.christianstuart.mimascota
 
 import android.Manifest
 import android.app.AlarmManager
@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.room.Room
-import com.example.mimascota.navigation.AppNavHost
-import com.example.mimascota.ui.theme.MiMascotaTheme
+import com.christianstuart.mimascota.navigation.AppNavHost
+import com.christianstuart.mimascota.ui.theme.MiMascotaTheme
 
 class MainActivity : ComponentActivity() {
     private val notificationPermissionLauncher = registerForActivityResult(

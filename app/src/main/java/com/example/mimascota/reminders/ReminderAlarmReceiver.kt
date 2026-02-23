@@ -1,4 +1,4 @@
-package com.example.mimascota.reminders
+package com.christianstuart.mimascota.reminders
 
 import android.Manifest
 import android.app.NotificationChannel
@@ -12,7 +12,7 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.mimascota.R
+import com.christianstuart.mimascota.R
 
 class ReminderAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {

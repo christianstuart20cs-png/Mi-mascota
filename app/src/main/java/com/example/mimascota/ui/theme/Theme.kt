@@ -1,4 +1,4 @@
-package com.example.mimascota.ui.theme
+package com.christianstuart.mimascota.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

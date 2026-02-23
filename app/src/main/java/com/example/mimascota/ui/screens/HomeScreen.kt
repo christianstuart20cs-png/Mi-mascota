@@ -1,4 +1,4 @@
-package com.example.mimascota.ui.screens
+package com.christianstuart.mimascota.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,11 +42,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.mimascota.Mascota
-import com.example.mimascota.MascotaDao
-import com.example.mimascota.RecordatorioDao
-import com.example.mimascota.R
-import com.example.mimascota.reminders.ReminderScheduler
+import com.christianstuart.mimascota.Mascota
+import com.christianstuart.mimascota.MascotaDao
+import com.christianstuart.mimascota.RecordatorioDao
+import com.christianstuart.mimascota.R
+import com.christianstuart.mimascota.reminders.ReminderScheduler
 import kotlinx.coroutines.launch
 
 @Composable

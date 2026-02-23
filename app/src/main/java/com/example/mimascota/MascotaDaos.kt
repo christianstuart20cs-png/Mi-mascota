@@ -1,4 +1,4 @@
-package com.example.mimascota
+package com.christianstuart.mimascota
 
 import androidx.room.Dao
 import androidx.room.Delete

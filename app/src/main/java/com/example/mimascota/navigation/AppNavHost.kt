@@ -1,4 +1,4 @@
-package com.example.mimascota.navigation
+package com.christianstuart.mimascota.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
@@ -6,13 +6,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.mimascota.MascotaDatabase
-import com.example.mimascota.ui.screens.AgregarRecordatorioScreen
-import com.example.mimascota.ui.screens.EditarRecordatorioScreen
-import com.example.mimascota.ui.screens.HistorialMedicoScreen
-import com.example.mimascota.ui.screens.MascotaFormScreen
-import com.example.mimascota.ui.screens.MiMascotaApp
-import com.example.mimascota.ui.screens.RecordatoriosMascotaScreen
+import com.christianstuart.mimascota.MascotaDatabase
+import com.christianstuart.mimascota.ui.screens.AgregarRecordatorioScreen
+import com.christianstuart.mimascota.ui.screens.EditarRecordatorioScreen
+import com.christianstuart.mimascota.ui.screens.HistorialMedicoScreen
+import com.christianstuart.mimascota.ui.screens.MascotaFormScreen
+import com.christianstuart.mimascota.ui.screens.MiMascotaApp
+import com.christianstuart.mimascota.ui.screens.RecordatoriosMascotaScreen
 
 @Composable
 fun AppNavHost(db: MascotaDatabase) {

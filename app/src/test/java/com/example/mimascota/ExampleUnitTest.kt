@@ -1,4 +1,4 @@
-package com.example.mimascota
+package com.christianstuart.mimascota
 
 import org.junit.Test
 
