@@ -34,6 +34,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,8 +63,10 @@ fun RecordatoriosMascotaScreen(
     mascotaId: Int,
     recordatorioDao: RecordatorioDao,
     onBack: () -> Unit,
-    onAdd: () -> Unit
+    onAdd: () -> Unit,
+    onEdit: (Int) -> Unit
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val recordatorios by recordatorioDao.getRecordatoriosByMascota(mascotaId).collectAsStateEmpty()
     var toDelete by remember { mutableStateOf<Recordatorio?>(null) }
@@ -94,6 +97,7 @@ fun RecordatoriosMascotaScreen(
                             Text("${item.fecha} - ${item.hora}", fontWeight = FontWeight.Bold, color = Color.White)
                             Text(item.descripcion, color = Color.White)
                         }
+                        IconButton(onClick = { onEdit(item.id) }) { Icon(Icons.Filled.Edit, "Editar") }
                         IconButton(onClick = { toDelete = item }) { Icon(Icons.Filled.Delete, "Eliminar") }
                     }
                 }
@@ -110,6 +114,7 @@ fun RecordatoriosMascotaScreen(
             confirmButton = {
                 TextButton(onClick = {
                     scope.launch {
+                        ReminderScheduler.cancelReminder(context, item.id)
                         recordatorioDao.delete(item)
                         toDelete = null
                     }
@@ -233,6 +238,181 @@ fun AgregarRecordatorioScreen(
             modifier = Modifier.fillMaxWidth()
         ) { Text("Guardar recordatorio") }
         Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    dateState.selectedDateMillis?.let { fecha = formatDate(it) }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") } }
+        ) { DatePicker(state = dateState) }
+    }
+
+    if (showTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    hora = formatTime(timeState.hour, timeState.minute)
+                    showTimePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("Cancelar") } },
+            text = { TimePicker(state = timeState) }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditarRecordatorioScreen(
+    recordatorioId: Int,
+    recordatorioDao: RecordatorioDao,
+    historialDao: HistorialMedicoDao,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var mascotaId by remember { mutableStateOf(-1) }
+    var descripcion by remember { mutableStateOf("") }
+    var fecha by remember { mutableStateOf(currentDate()) }
+    var hora by remember { mutableStateOf(currentTime()) }
+    var errores by remember { mutableStateOf<List<String>>(emptyList()) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var cargando by remember { mutableStateOf(true) }
+    var notFound by remember { mutableStateOf(false) }
+    val dateState = rememberDatePickerState()
+    val timeState = rememberTimePickerState(is24Hour = true)
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        focusedLabelColor = Color.White,
+        unfocusedLabelColor = Color.White.copy(alpha = 0.9f),
+        focusedBorderColor = Color.White,
+        unfocusedBorderColor = Color.White.copy(alpha = 0.85f),
+        focusedTrailingIconColor = Color.White,
+        unfocusedTrailingIconColor = Color.White,
+        cursorColor = Color.White
+    )
+
+    fun validar(): Boolean {
+        val triggerAtMillis = parseReminderDateTimeMillis(fecha, hora)
+        errores = listOfNotNull(
+            if (descripcion.isBlank()) "Descripcion obligatoria." else null,
+            if (fecha.isBlank()) "Fecha obligatoria." else null,
+            if (hora.isBlank()) "Hora obligatoria." else null,
+            if (recordatorioId <= 0) "Recordatorio invalido." else null,
+            if (mascotaId <= 0) "Mascota invalida." else null,
+            if (triggerAtMillis == null) "Fecha u hora invalida." else null,
+            if (triggerAtMillis != null && triggerAtMillis <= System.currentTimeMillis()) "El recordatorio debe ser futuro." else null
+        )
+        return errores.isEmpty()
+    }
+
+    LaunchedEffect(recordatorioId) {
+        val actual = recordatorioDao.getById(recordatorioId)
+        if (actual == null) {
+            notFound = true
+        } else {
+            mascotaId = actual.mascotaId
+            descripcion = actual.descripcion
+            fecha = actual.fecha
+            hora = actual.hora
+        }
+        cargando = false
+    }
+
+    val scrollState = rememberScrollState()
+
+    BackgroundColumn(background = R.drawable.planilla_medica) {
+        androidx.compose.foundation.layout.Column(modifier = Modifier.verticalScroll(scrollState)) {
+            TopAppBar(
+                title = { Text("Editar recordatorio", fontWeight = FontWeight.ExtraBold) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } }
+            )
+
+            if (cargando) {
+                Text("Cargando...", color = Color.White)
+                return@Column
+            }
+
+            if (notFound) {
+                Text("No se encontro el recordatorio.", color = Color.White)
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Volver") }
+                return@Column
+            }
+
+            OutlinedTextField(
+                descripcion,
+                { descripcion = it },
+                label = { Text("Descripcion") },
+                colors = fieldColors,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = fecha,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Fecha") },
+                colors = fieldColors,
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = { IconButton(onClick = { showDatePicker = true }) { Icon(Icons.Filled.DateRange, "Fecha") } }
+            )
+            OutlinedTextField(
+                value = hora,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Hora") },
+                colors = fieldColors,
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = { IconButton(onClick = { showTimePicker = true }) { Icon(Icons.Filled.Edit, "Hora") } }
+            )
+            ErrorList(errors = errores, modifier = Modifier.padding(top = 8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = {
+                    if (!validar()) return@Button
+                    scope.launch {
+                        val descripcionLimpia = descripcion.trim()
+                        val actualizado = Recordatorio(
+                            id = recordatorioId,
+                            mascotaId = mascotaId,
+                            fecha = fecha,
+                            hora = hora,
+                            descripcion = descripcionLimpia
+                        )
+                        recordatorioDao.update(actualizado)
+                        ReminderScheduler.cancelReminder(context, recordatorioId)
+                        parseReminderDateTimeMillis(fecha, hora)?.let { triggerAtMillis ->
+                            ReminderScheduler.scheduleReminder(
+                                context = context,
+                                reminderId = recordatorioId,
+                                description = descripcionLimpia,
+                                triggerAtMillis = triggerAtMillis
+                            )
+                        }
+                        historialDao.insert(
+                            HistorialMedico(
+                                mascotaId = mascotaId,
+                                fecha = fecha,
+                                sintoma = "Recordatorio actualizado",
+                                tratamiento = descripcionLimpia
+                            )
+                        )
+                        onBack()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Guardar cambios") }
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 

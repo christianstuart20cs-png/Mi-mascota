@@ -37,6 +37,13 @@ object ReminderScheduler {
         }
     }
 
+    fun cancelReminder(context: Context, reminderId: Int) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val pendingIntent = buildAlarmPendingIntent(context, reminderId, description = "")
+        alarmManager.cancel(pendingIntent)
+        pendingIntent.cancel()
+    }
+
     private fun buildAlarmPendingIntent(
         context: Context,
         reminderId: Int,

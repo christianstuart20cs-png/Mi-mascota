@@ -29,7 +29,9 @@ class MainActivity : ComponentActivity() {
             applicationContext,
             MascotaDatabase::class.java,
             "mascotas-db"
-        ).build()
+        )
+            .addMigrations(MascotaDatabase.MIGRATION_6_7)
+            .build()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

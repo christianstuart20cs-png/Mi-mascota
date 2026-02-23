@@ -12,6 +12,8 @@ data class Mascota(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val nombre: String,
     val tipo: String,
+    val sexo: String = "",
+    val fechaNacimiento: String = "",
     val raza: String,
     val descripcion: String,
     val pesoKg: Double,

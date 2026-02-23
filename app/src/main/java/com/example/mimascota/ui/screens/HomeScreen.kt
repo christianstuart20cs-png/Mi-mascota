@@ -37,18 +37,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.mimascota.Mascota
 import com.example.mimascota.MascotaDao
+import com.example.mimascota.RecordatorioDao
 import com.example.mimascota.R
+import com.example.mimascota.reminders.ReminderScheduler
 import kotlinx.coroutines.launch
 
 @Composable
 fun MiMascotaApp(
     mascotaDao: MascotaDao,
+    recordatorioDao: RecordatorioDao,
     navToAdd: () -> Unit,
     navToEdit: (Int) -> Unit,
     navToHistory: (Int) -> Unit,
@@ -56,6 +60,7 @@ fun MiMascotaApp(
 ) {
     val mascotas by mascotaDao.getAll().collectAsStateEmpty()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var toDelete by remember { mutableStateOf<Mascota?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -105,6 +110,12 @@ fun MiMascotaApp(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
+                                    text = "${mascota.sexo} - Nac: ${mascota.fechaNacimiento}",
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
                                     text = mascota.descripcion,
                                     color = Color.White,
                                     maxLines = 2,
@@ -128,10 +139,18 @@ fun MiMascotaApp(
                                 }
                                 Row {
                                     IconButton(onClick = { navToEdit(mascota.id) }) {
-                                        Icon(Icons.Filled.Edit, contentDescription = "Editar")
+                                        Icon(
+                                            Icons.Filled.Edit,
+                                            contentDescription = "Editar",
+                                            tint = Color.White
+                                        )
                                     }
                                     IconButton(onClick = { toDelete = mascota }) {
-                                        Icon(Icons.Filled.Delete, contentDescription = "Eliminar")
+                                        Icon(
+                                            Icons.Filled.Delete,
+                                            contentDescription = "Eliminar",
+                                            tint = Color.White
+                                        )
                                     }
                                 }
                             }
@@ -159,6 +178,9 @@ fun MiMascotaApp(
                 TextButton(
                     onClick = {
                         scope.launch {
+                            recordatorioDao.getRecordatoriosSnapshotByMascota(mascota.id).forEach { reminder ->
+                                ReminderScheduler.cancelReminder(context, reminder.id)
+                            }
                             mascotaDao.delete(mascota)
                             toDelete = null
                         }

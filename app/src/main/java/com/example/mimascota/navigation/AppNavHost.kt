@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.mimascota.MascotaDatabase
 import com.example.mimascota.ui.screens.AgregarRecordatorioScreen
+import com.example.mimascota.ui.screens.EditarRecordatorioScreen
 import com.example.mimascota.ui.screens.HistorialMedicoScreen
 import com.example.mimascota.ui.screens.MascotaFormScreen
 import com.example.mimascota.ui.screens.MiMascotaApp
@@ -20,6 +21,7 @@ fun AppNavHost(db: MascotaDatabase) {
         composable("home") {
             MiMascotaApp(
                 mascotaDao = db.mascotaDao(),
+                recordatorioDao = db.recordatorioDao(),
                 navToAdd = { navController.navigate("add_pet") },
                 navToEdit = { id -> navController.navigate("edit_pet/$id") },
                 navToHistory = { id -> navController.navigate("history/$id") },
@@ -61,7 +63,8 @@ fun AppNavHost(db: MascotaDatabase) {
                 mascotaId = mascotaId,
                 recordatorioDao = db.recordatorioDao(),
                 onBack = { navController.popBackStack() },
-                onAdd = { navController.navigate("add_reminder/$mascotaId") }
+                onAdd = { navController.navigate("add_reminder/$mascotaId") },
+                onEdit = { reminderId -> navController.navigate("edit_reminder/$reminderId") }
             )
         }
         composable(
@@ -70,6 +73,16 @@ fun AppNavHost(db: MascotaDatabase) {
         ) { backStack ->
             AgregarRecordatorioScreen(
                 mascotaId = backStack.arguments?.getInt("id") ?: -1,
+                recordatorioDao = db.recordatorioDao(),
+                historialDao = db.historialMedicoDao()
+            ) { navController.popBackStack() }
+        }
+        composable(
+            route = "edit_reminder/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStack ->
+            EditarRecordatorioScreen(
+                recordatorioId = backStack.arguments?.getInt("id") ?: -1,
                 recordatorioDao = db.recordatorioDao(),
                 historialDao = db.historialMedicoDao()
             ) { navController.popBackStack() }

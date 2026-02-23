@@ -39,8 +39,17 @@ interface RecordatorioDao {
     @Query("SELECT * FROM recordatorios WHERE mascotaId = :mascotaId ORDER BY id DESC")
     fun getRecordatoriosByMascota(mascotaId: Int): Flow<List<Recordatorio>>
 
+    @Query("SELECT * FROM recordatorios WHERE mascotaId = :mascotaId")
+    suspend fun getRecordatoriosSnapshotByMascota(mascotaId: Int): List<Recordatorio>
+
+    @Query("SELECT * FROM recordatorios WHERE id = :id")
+    suspend fun getById(id: Int): Recordatorio?
+
     @Insert
     suspend fun insert(recordatorio: Recordatorio): Long
+
+    @Update
+    suspend fun update(recordatorio: Recordatorio)
 
     @Delete
     suspend fun delete(recordatorio: Recordatorio)
