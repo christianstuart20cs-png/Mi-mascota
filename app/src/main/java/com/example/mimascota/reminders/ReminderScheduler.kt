@@ -4,7 +4,6 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import com.christianstuart.mimascota.MainActivity
 
 object ReminderScheduler {
     const val EXTRA_REMINDER_ID = "extra_reminder_id"
@@ -18,23 +17,11 @@ object ReminderScheduler {
     ) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pendingIntent = buildAlarmPendingIntent(context, reminderId, description)
-        val openAppIntent = PendingIntent.getActivity(
-            context,
-            reminderId,
-            Intent(context, MainActivity::class.java),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        alarmManager.setAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            triggerAtMillis,
+            pendingIntent
         )
-
-        try {
-            val alarmInfo = AlarmManager.AlarmClockInfo(triggerAtMillis, openAppIntent)
-            alarmManager.setAlarmClock(alarmInfo, pendingIntent)
-        } catch (_: SecurityException) {
-            alarmManager.setAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                triggerAtMillis,
-                pendingIntent
-            )
-        }
     }
 
     fun cancelReminder(context: Context, reminderId: Int) {

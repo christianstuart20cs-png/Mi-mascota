@@ -18,7 +18,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.christianstuart.mimascota"
+        applicationId = "com.christianstuart.mimascota2"
         minSdk = 30
         targetSdk = 36
         versionCode = 1

@@ -66,7 +66,7 @@ fun MiMascotaApp(
     Box(modifier = Modifier.fillMaxSize()) {
         BackgroundColumn(background = R.drawable.una_veterinaria_sonr) {
             Text(
-                text = "Mascotas registradas",
+                text = "Mis Mascotas",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onPrimary,
                 fontWeight = FontWeight.Bold

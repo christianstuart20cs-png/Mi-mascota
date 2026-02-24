@@ -1,34 +1,32 @@
-# Política de Privacidad - Mi Mascota
+﻿# Privacy Policy - Mis Mascotas
 
-Última actualización: 23 de febrero de 2026
+Last updated: February 24, 2026
 
-Mi Mascota almacena información de mascotas y recordatorios únicamente en el dispositivo del usuario.
+Mis Mascotas stores pet information and reminders only on the user's device.
 
-## Datos que trata la app
-- Mascotas: nombre, tipo, sexo, fecha de nacimiento, raza, descripción, peso y foto.
-- Historial médico: fecha, síntoma y tratamiento.
-- Recordatorios: fecha, hora y descripción.
+## Data processed by the app
+- Pets: name, type, sex, date of birth, breed, description, weight, and photo.
+- Medical history: date, symptom, and treatment.
+- Reminders: date, time, and description.
 
-## Recopilación y transferencia de datos
-Mi Mascota no recopila ni envía datos personales a servidores externos en su versión actual.
+## Data collection and transfer
+Mis Mascotas does not collect or send personal data to external servers in the current version.
 
-## Compartir datos con terceros
-Mi Mascota no comparte datos con terceros.
+## Data sharing with third parties
+Mis Mascotas does not share data with third parties.
 
-## Permisos solicitados
-La app puede solicitar estos permisos para su funcionamiento:
+## Permissions used
+The app may request the following permissions:
 - `POST_NOTIFICATIONS`
-- `SCHEDULE_EXACT_ALARM`
-- `USE_FULL_SCREEN_INTENT`
 - `VIBRATE`
 
-Estos permisos se usan para notificaciones y alarmas de recordatorios.
+These permissions are used to show reminder notifications and vibration alerts.
 
-## Seguridad
-Al no transferir datos a servidores externos, la información se mantiene local en el dispositivo del usuario.
+## Security
+Since data is not transferred to external servers, information remains on the user's device.
 
-## Eliminación de datos
-El usuario puede eliminar mascotas, historiales y recordatorios desde la misma app.
+## Data deletion
+Users can delete pets, medical history records, and reminders directly in the app.
 
-## Contacto
-Si tenés consultas sobre privacidad, escribinos a: `TU_EMAIL_DE_CONTACTO`
+## Contact
+For privacy questions, contact: `TU_EMAIL_DE_CONTACTO`

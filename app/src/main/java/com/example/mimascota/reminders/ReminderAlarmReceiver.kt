@@ -12,6 +12,7 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.christianstuart.mimascota.MainActivity
 import com.christianstuart.mimascota.R
 
 class ReminderAlarmReceiver : BroadcastReceiver() {
@@ -20,7 +21,6 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         val description = intent.getStringExtra(ReminderScheduler.EXTRA_REMINDER_DESC).orEmpty()
         ensureChannel(context)
         showAlarmNotification(context, reminderId, description)
-        openAlarmPopup(context, description)
     }
 
     private fun ensureChannel(context: Context) {
@@ -39,15 +39,14 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
     }
 
     private fun showAlarmNotification(context: Context, reminderId: Int, description: String) {
-        val popupIntent = Intent(context, ReminderAlarmActivity::class.java).apply {
-            putExtra(ReminderScheduler.EXTRA_REMINDER_DESC, description)
+        val openAppIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
 
-        val fullScreenPendingIntent = PendingIntent.getActivity(
+        val contentPendingIntent = PendingIntent.getActivity(
             context,
             reminderId,
-            popupIntent,
+            openAppIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -58,8 +57,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)
-            .setContentIntent(fullScreenPendingIntent)
-            .setFullScreenIntent(fullScreenPendingIntent, true)
+            .setContentIntent(contentPendingIntent)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .build()
 
@@ -72,14 +70,6 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         }
 
         NotificationManagerCompat.from(context).notify(reminderId, notification)
-    }
-
-    private fun openAlarmPopup(context: Context, description: String) {
-        val popupIntent = Intent(context, ReminderAlarmActivity::class.java).apply {
-            putExtra(ReminderScheduler.EXTRA_REMINDER_DESC, description)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        runCatching { context.startActivity(popupIntent) }
     }
 
     companion object {
