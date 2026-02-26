@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
+import androidx.core.app.NotificationManagerCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -28,6 +29,7 @@ import com.christianstuart.mimascota.ui.theme.MiMascotaTheme
 
 class ReminderAlarmActivity : ComponentActivity() {
     private var ringtone: Ringtone? = null
+    private var reminderId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +39,7 @@ class ReminderAlarmActivity : ComponentActivity() {
         }
 
         val description = intent.getStringExtra(ReminderScheduler.EXTRA_REMINDER_DESC).orEmpty()
+        reminderId = intent.getIntExtra(ReminderScheduler.EXTRA_REMINDER_ID, 0)
 
         startAlarmEffects()
 
@@ -65,6 +68,9 @@ class ReminderAlarmActivity : ComponentActivity() {
                         val stopAndClose = remember {
                             {
                                 stopAlarmEffects()
+                                if (reminderId != 0) {
+                                    NotificationManagerCompat.from(this@ReminderAlarmActivity).cancel(reminderId)
+                                }
                                 finish()
                             }
                         }

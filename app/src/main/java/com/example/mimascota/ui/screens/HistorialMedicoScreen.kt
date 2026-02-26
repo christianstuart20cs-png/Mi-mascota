@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -27,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -46,6 +48,9 @@ import com.christianstuart.mimascota.HistorialMedico
 import com.christianstuart.mimascota.HistorialMedicoDao
 import com.christianstuart.mimascota.R
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +69,23 @@ fun HistorialMedicoScreen(
     var editingHistorialId by remember { mutableStateOf<Int?>(null) }
     var toDelete by remember { mutableStateOf<HistorialMedico?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
-    val dateState = rememberDatePickerState()
+    var searchQuery by remember { mutableStateOf("") }
+    val dateState = rememberDatePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis <= System.currentTimeMillis()
+            }
+        }
+    )
+    val historialFiltrado = remember(historial, searchQuery) {
+        val query = searchQuery.trim().lowercase()
+        if (query.isBlank()) historial
+        else historial.filter { item ->
+            item.fecha.lowercase().contains(query) ||
+            item.sintoma.lowercase().contains(query) ||
+            item.tratamiento.lowercase().contains(query)
+        }
+    }
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = Color.White,
         unfocusedTextColor = Color.White,
@@ -80,6 +101,7 @@ fun HistorialMedicoScreen(
     fun validar(): Boolean {
         errores = listOfNotNull(
             if (fecha.isBlank()) "Fecha obligatoria." else null,
+            if (fecha.isNotBlank() && !isMedicalDateValid(fecha)) "La fecha no puede ser futura." else null,
             if (sintoma.isBlank()) "Sintoma obligatorio." else null,
             if (tratamiento.isBlank()) "Tratamiento obligatorio." else null,
             if (mascotaId <= 0) "Mascota invalida." else null
@@ -116,6 +138,16 @@ fun HistorialMedicoScreen(
                 }
             }
         )
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            label = { Text("Buscar en historial") },
+            singleLine = true,
+            leadingIcon = { Icon(Icons.Filled.Search, "Buscar") },
+            colors = fieldColors,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = fecha,
             onValueChange = {},
@@ -186,7 +218,7 @@ fun HistorialMedicoScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 12.dp)
         ) {
-            items(historial, key = { it.id }) { item ->
+            items(historialFiltrado, key = { it.id }) { item ->
                 Card(
                     shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.58f))
@@ -208,6 +240,14 @@ fun HistorialMedicoScreen(
                         Text("Sintoma: ${item.sintoma}", color = Color.White)
                         Text("Tratamiento: ${item.tratamiento}", color = Color.White)
                     }
+                }
+            }
+            if (historialFiltrado.isEmpty() && searchQuery.isNotBlank()) {
+                item {
+                    Text(
+                        text = "No se encontraron eventos para \"$searchQuery\".",
+                        color = Color.White
+                    )
                 }
             }
         }
@@ -248,4 +288,10 @@ fun HistorialMedicoScreen(
             dismissButton = { TextButton(onClick = { toDelete = null }) { Text("Cancelar") } }
         )
     }
+}
+
+private fun isMedicalDateValid(value: String): Boolean {
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.getDefault())
+    val parsedDate = runCatching { LocalDate.parse(value, formatter) }.getOrNull() ?: return false
+    return !parsedDate.isAfter(LocalDate.now())
 }
