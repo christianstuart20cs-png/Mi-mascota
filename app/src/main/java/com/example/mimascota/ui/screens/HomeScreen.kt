@@ -1,5 +1,8 @@
 package com.christianstuart.mimascota.ui.screens
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,13 +47,16 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.christianstuart.mimascota.Mascota
 import com.christianstuart.mimascota.MascotaDao
+import com.christianstuart.mimascota.MascotaDatabase
 import com.christianstuart.mimascota.RecordatorioDao
 import com.christianstuart.mimascota.R
+import com.christianstuart.mimascota.backup.BackupManager
 import com.christianstuart.mimascota.reminders.ReminderScheduler
 import kotlinx.coroutines.launch
 
 @Composable
 fun MiMascotaApp(
+    db: MascotaDatabase,
     mascotaDao: MascotaDao,
     recordatorioDao: RecordatorioDao,
     navToAdd: () -> Unit,
@@ -62,6 +68,42 @@ fun MiMascotaApp(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var toDelete by remember { mutableStateOf<Mascota?>(null) }
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            runCatching {
+                BackupManager.exportToUri(context, db, uri)
+            }.onSuccess {
+                Toast.makeText(context, "Respaldo exportado.", Toast.LENGTH_SHORT).show()
+            }.onFailure {
+                Toast.makeText(
+                    context,
+                    "No se pudo exportar: ${it.message.orEmpty()}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            runCatching {
+                BackupManager.importFromUri(context, db, uri)
+            }.onSuccess {
+                Toast.makeText(context, "Respaldo importado.", Toast.LENGTH_SHORT).show()
+            }.onFailure {
+                Toast.makeText(
+                    context,
+                    "No se pudo importar: ${it.message.orEmpty()}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         BackgroundColumn(background = R.drawable.una_veterinaria_sonr) {
@@ -71,6 +113,28 @@ fun MiMascotaApp(
                 color = MaterialTheme.colorScheme.onPrimary,
                 fontWeight = FontWeight.Bold
             )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = {
+                        val fileName = "mimascota-backup-${System.currentTimeMillis()}.json"
+                        exportLauncher.launch(fileName)
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Exportar")
+                }
+                Button(
+                    onClick = { importLauncher.launch(arrayOf("application/json", "text/plain")) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Importar")
+                }
+            }
             Spacer(modifier = Modifier.height(12.dp))
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp),

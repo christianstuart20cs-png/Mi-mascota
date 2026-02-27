@@ -20,6 +20,7 @@ fun AppNavHost(db: MascotaDatabase) {
     NavHost(navController = navController, startDestination = "home") {
         composable("home") {
             MiMascotaApp(
+                db = db,
                 mascotaDao = db.mascotaDao(),
                 recordatorioDao = db.recordatorioDao(),
                 navToAdd = { navController.navigate("add_pet") },
