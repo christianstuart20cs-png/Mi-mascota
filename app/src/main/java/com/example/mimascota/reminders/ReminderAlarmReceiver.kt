@@ -18,6 +18,14 @@ import com.christianstuart.mimascota.R
 
 class ReminderAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == ACTION_DISMISS_ALARM) {
+            val reminderId = intent.getIntExtra(ReminderScheduler.EXTRA_REMINDER_ID, 0)
+            if (reminderId != 0) {
+                NotificationManagerCompat.from(context).cancel(reminderId)
+            }
+            return
+        }
+
         val reminderId = intent.getIntExtra(ReminderScheduler.EXTRA_REMINDER_ID, 0)
         val description = intent.getStringExtra(ReminderScheduler.EXTRA_REMINDER_DESC).orEmpty()
         ensureChannel(context)
@@ -60,6 +68,16 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             alarmIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val dismissIntent = Intent(context, ReminderAlarmReceiver::class.java).apply {
+            action = ACTION_DISMISS_ALARM
+            putExtra(ReminderScheduler.EXTRA_REMINDER_ID, reminderId)
+        }
+        val dismissPendingIntent = PendingIntent.getBroadcast(
+            context,
+            reminderId + DISMISS_REQUEST_OFFSET,
+            dismissIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -72,6 +90,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             .setAutoCancel(false)
             .setContentIntent(fullScreenPendingIntent)
             .setFullScreenIntent(fullScreenPendingIntent, true)
+            .addAction(0, "Detener", dismissPendingIntent)
             .setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE)
             .build()
 
@@ -88,5 +107,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
 
     companion object {
         private const val CHANNEL_ID = "reminders_alarm_channel"
+        private const val ACTION_DISMISS_ALARM = "com.christianstuart.mimascota.ACTION_DISMISS_ALARM"
+        private const val DISMISS_REQUEST_OFFSET = 100_000
     }
 }
