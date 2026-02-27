@@ -4,6 +4,8 @@ import android.media.Ringtone
 import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.app.NotificationManagerCompat
@@ -30,6 +32,11 @@ import com.christianstuart.mimascota.ui.theme.MiMascotaTheme
 class ReminderAlarmActivity : ComponentActivity() {
     private var ringtone: Ringtone? = null
     private var reminderId: Int = 0
+    private val alarmHandler = Handler(Looper.getMainLooper())
+    private val autoStopAlarmRunnable = Runnable {
+        stopAlarmEffects()
+        finish()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +49,7 @@ class ReminderAlarmActivity : ComponentActivity() {
         reminderId = intent.getIntExtra(ReminderScheduler.EXTRA_REMINDER_ID, 0)
 
         startAlarmEffects()
+        alarmHandler.postDelayed(autoStopAlarmRunnable, ALARM_DURATION_MS)
 
         setContent {
             MiMascotaTheme {
@@ -68,6 +76,7 @@ class ReminderAlarmActivity : ComponentActivity() {
                         val stopAndClose = remember {
                             {
                                 stopAlarmEffects()
+                                alarmHandler.removeCallbacks(autoStopAlarmRunnable)
                                 if (reminderId != 0) {
                                     NotificationManagerCompat.from(this@ReminderAlarmActivity).cancel(reminderId)
                                 }
@@ -87,6 +96,7 @@ class ReminderAlarmActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        alarmHandler.removeCallbacks(autoStopAlarmRunnable)
         stopAlarmEffects()
         super.onDestroy()
     }
@@ -95,6 +105,9 @@ class ReminderAlarmActivity : ComponentActivity() {
         val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         ringtone = RingtoneManager.getRingtone(this, alarmUri)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            ringtone?.isLooping = true
+        }
         ringtone?.play()
 
         val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
@@ -109,5 +122,9 @@ class ReminderAlarmActivity : ComponentActivity() {
     private fun stopAlarmEffects() {
         ringtone?.stop()
         ringtone = null
+    }
+
+    companion object {
+        private const val ALARM_DURATION_MS = 30_000L
     }
 }
