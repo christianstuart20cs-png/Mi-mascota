@@ -24,6 +24,11 @@ object ReminderScheduler {
                 triggerAtMillis,
                 pendingIntent
             )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            alarmManager.setAlarmClock(
+                AlarmManager.AlarmClockInfo(triggerAtMillis, pendingIntent),
+                pendingIntent
+            )
         } else {
             alarmManager.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,

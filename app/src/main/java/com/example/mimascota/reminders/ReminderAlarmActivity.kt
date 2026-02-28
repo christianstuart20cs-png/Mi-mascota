@@ -2,13 +2,13 @@ package com.christianstuart.mimascota.reminders
 
 import android.media.Ringtone
 import android.media.RingtoneManager
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
-import androidx.core.app.NotificationManagerCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -32,10 +32,10 @@ import com.christianstuart.mimascota.ui.theme.MiMascotaTheme
 class ReminderAlarmActivity : ComponentActivity() {
     private var ringtone: Ringtone? = null
     private var reminderId: Int = 0
+    private var reminderDescription: String = ""
     private val alarmHandler = Handler(Looper.getMainLooper())
     private val autoStopAlarmRunnable = Runnable {
-        stopAlarmEffects()
-        finish()
+        stopAlarmAndClose(manualDismiss = false)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +45,7 @@ class ReminderAlarmActivity : ComponentActivity() {
             setTurnScreenOn(true)
         }
 
-        val description = intent.getStringExtra(ReminderScheduler.EXTRA_REMINDER_DESC).orEmpty()
+        reminderDescription = intent.getStringExtra(ReminderScheduler.EXTRA_REMINDER_DESC).orEmpty()
         reminderId = intent.getIntExtra(ReminderScheduler.EXTRA_REMINDER_ID, 0)
 
         startAlarmEffects()
@@ -69,18 +69,13 @@ class ReminderAlarmActivity : ComponentActivity() {
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = description.ifBlank { "Tienes una tarea pendiente para tu mascota." },
+                            text = reminderDescription.ifBlank { "Tienes una tarea pendiente para tu mascota." },
                             modifier = Modifier.padding(top = 12.dp, bottom = 24.dp),
                             color = Color.White
                         )
                         val stopAndClose = remember {
                             {
-                                stopAlarmEffects()
-                                alarmHandler.removeCallbacks(autoStopAlarmRunnable)
-                                if (reminderId != 0) {
-                                    NotificationManagerCompat.from(this@ReminderAlarmActivity).cancel(reminderId)
-                                }
-                                finish()
+                                stopAlarmAndClose(manualDismiss = true)
                             }
                         }
                         Button(onClick = stopAndClose) {
@@ -117,6 +112,24 @@ class ReminderAlarmActivity : ComponentActivity() {
             @Suppress("DEPRECATION")
             vibrator.vibrate(1200)
         }
+    }
+
+    private fun stopAlarmAndClose(manualDismiss: Boolean) {
+        stopAlarmEffects()
+        alarmHandler.removeCallbacks(autoStopAlarmRunnable)
+        if (reminderId != 0) {
+            val receiverIntent = Intent(this, ReminderAlarmReceiver::class.java).apply {
+                action = if (manualDismiss) {
+                    ReminderAlarmReceiver.ACTION_DISMISS_ALARM
+                } else {
+                    ReminderAlarmReceiver.ACTION_AUTO_TIMEOUT_ALARM
+                }
+                putExtra(ReminderScheduler.EXTRA_REMINDER_ID, reminderId)
+                putExtra(ReminderScheduler.EXTRA_REMINDER_DESC, reminderDescription)
+            }
+            sendBroadcast(receiverIntent)
+        }
+        finish()
     }
 
     private fun stopAlarmEffects() {
